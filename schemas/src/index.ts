@@ -1,18 +1,37 @@
-import { z } from "zod";
+//Account
+export * as Account from './account.schema.js';
+export type {
+  AccountType,
+  CreateAccount,
+  UpdateAccount,
+  UpdateOutstanding
+} from './account.schema.js';
 
-export const HealthSchema = z.object({
-  ok: z.literal(true),
-  uptime: z.number()
-});
+//Auth
+export * as Auth from './auth.schema.js';
+export type { LoginUser, RegisterUser, UserRole } from './auth.schema.js';
 
-export const UserSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1),
-  email: z.string().email()
-});
+// Common
+export * as Common from './common.schema.js';
+export type { DateOnly, DateTime, ObjectId } from './common.schema.js';
 
-export const CreateUserInputSchema = UserSchema.omit({ id: true });
+//Staff
+export * as Staff from './staff.schema.js';
+export type {
+  Attendance,
+  AttendanceQuery,
+  AttendanceType,
+  BulkAttendance,
+  CreateEmployment,
+  CreateStaff,
+  DeleteEmployment,
+  SalaryType
+} from './staff.schema.js';
 
-export type Health = z.infer<typeof HealthSchema>;
-export type User = z.infer<typeof UserSchema>;
-export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;
+//Transaction
+export * as Transaction from './transaction.schema.js';
+export type {
+  CreateTransaction,
+  TransactionType,
+  UpdateTransaction
+} from './transaction.schema.js';
