@@ -13,7 +13,7 @@ export type { LoginUser, RegisterUser, UserRole } from './auth.schema.js';
 
 // Common
 export * as Common from './common.schema.js';
-export type { DateOnly, DateTime, ObjectId } from './common.schema.js';
+export type { DateOnly, DateTime, ObjectId, Phone } from './common.schema.js';
 
 //Staff
 export * as Staff from './staff.schema.js';

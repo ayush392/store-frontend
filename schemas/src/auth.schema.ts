@@ -1,9 +1,10 @@
 import { z } from 'zod';
+import { PhoneSchema } from './common.schema.js';
 
 export const UserRoleEnum = z.enum(['ADMIN', 'OWNER', 'STAFF', 'USER']);
 
 export const LoginUserSchema = z.object({
-  phone: z.string().regex(/^[6-9]\d{9}$/, 'Please enter a valid mobile number'),
+  phone: PhoneSchema,
   password: z.string().min(1, 'password is required')
 });
 

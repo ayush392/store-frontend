@@ -21,6 +21,11 @@ export const DateTimeSchema = z
   .union([z.iso.datetime({ offset: true }), z.date()])
   .transform((d) => new Date(d));
 
+export const PhoneSchema = z
+  .string()
+  .regex(/^[6-9]\d{9}$/, 'Please enter a valid mobile number');
+
 export type ObjectId = z.infer<typeof ObjectIdSchema>;
 export type DateOnly = z.infer<typeof DateOnlySchema>;
 export type DateTime = z.infer<typeof DateTimeSchema>;
+export type Phone = z.infer<typeof PhoneSchema>;

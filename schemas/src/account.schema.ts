@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { ObjectIdSchema } from './common.schema.js';
+import { ObjectIdSchema, PhoneSchema } from './common.schema.js';
 
 export const AccountTypeEnum = z.enum(['CUSTOMER', 'STORE', 'STAFF']);
 
 export const BaseAccountSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long'),
   displayName: z.string().optional().default(''),
-  phone: z.string().regex(/^[6-9]\d{9}$/, 'Please enter a valid mobile number'),
+  phone: PhoneSchema,
   address: z.string().min(5, 'Address must be at least 5 characters long'),
   notes: z.string().optional()
 });
