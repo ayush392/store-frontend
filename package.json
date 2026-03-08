@@ -13,11 +13,19 @@
   },
   "dependencies": {
     "@store/schemas": "workspace:*",
+    "@tailwindcss/vite": "^4.2.1",
+    "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-router": "^1.166.2",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-icons": "^5.6.0",
+    "tailwindcss": "^4.2.1",
+    "vite-plugin-pwa": "^1.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@tanstack/eslint-plugin-query": "^5.91.4",
+    "@tanstack/router-plugin": "^1.166.2",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
