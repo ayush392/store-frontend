@@ -1,6 +1,9 @@
 {
   "name": "Dukaan Book",
   "short_name": "Dukaan",
+  "id": "/",
+  "description": "Dukaan Book application",
+  "scope": "/",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#2563eb",

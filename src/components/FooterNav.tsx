@@ -18,7 +18,7 @@ const navItems = [
 export const FooterNav = () => {
   return (
     <footer className="sticky bottom-0 z-50 bg-white border-t border-gray-200 px-2 py-2">
-      <div className="flex justify-around">
+      <nav className="flex justify-around">
         {navItems.map(({ path, icon: Icon, label }) => (
           <Link
             key={path}
@@ -37,7 +37,7 @@ export const FooterNav = () => {
             <span className="text-xs mt-1 font-medium truncate">{label}</span>
           </Link>
         ))}
-      </div>
+      </nav>
     </footer>
   );
 };
