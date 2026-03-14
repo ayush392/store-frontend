@@ -1,6 +1,7 @@
 //Account
 export * as Account from './account.schema.js';
 export type {
+  AccountQuery,
   AccountType,
   CreateAccount,
   UpdateAccount,
