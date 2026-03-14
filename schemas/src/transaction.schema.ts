@@ -11,7 +11,9 @@ export const TransactionTypeEnum = z.enum([
 export const CreateTransactionSchema = z.object({
   accountId: ObjectIdSchema,
   transactionType: TransactionTypeEnum,
-  amount: z.number().positive('Amount must be greater than 0'),
+  amount: z
+    .int('Amount should be integer')
+    .positive('Amount must be greater than 0'),
   date: DateTimeSchema,
   note: z.string().trim().default('')
 });
