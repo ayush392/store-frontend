@@ -58,11 +58,13 @@ export const AttendanceQuerySchema = z.object({
   employmentId: ObjectIdSchema.optional(),
   month: z
     .string()
+    .trim()
     .regex(/^\d{1,2}$/, 'Month must be a number')
     .transform(Number)
     .refine((m) => m >= 1 && m <= 12, 'Month must be between 1 and 12'),
   year: z
     .string()
+    .trim()
     .regex(/^\d{4}$/, 'Year must be 4 digits')
     .transform(Number)
     .refine((y) => y >= 2020 && y <= 2100, 'Year out of range')

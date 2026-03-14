@@ -5,10 +5,7 @@ export const TransactionTypeEnum = z.enum([
   'UDHAAR',
   'PAYMENT',
   'SALARY',
-  'BONUS',
-
-  'RETURN',
-  'ADJUSTMENT'
+  'ADVANCE'
 ]);
 
 export const CreateTransactionSchema = z.object({
@@ -16,7 +13,7 @@ export const CreateTransactionSchema = z.object({
   transactionType: TransactionTypeEnum,
   amount: z.number().positive('Amount must be greater than 0'),
   date: DateTimeSchema,
-  note: z.string().default('')
+  note: z.string().trim().default('')
 });
 
 export const UpdateTransactionSchema = CreateTransactionSchema.omit({

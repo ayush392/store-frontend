@@ -10,6 +10,7 @@ export const ObjectIdSchema = z
 
 export const DateOnlySchema = z
   .string()
+  .trim()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date format should be YYYY-MM-DD')
   .refine(
     (d) => !Number.isNaN(new Date(`${d}T00:00:00+05:30`).getTime()),
@@ -23,6 +24,7 @@ export const DateTimeSchema = z
 
 export const PhoneSchema = z
   .string()
+  .trim()
   .regex(/^[6-9]\d{9}$/, 'Please enter a valid mobile number');
 
 export type ObjectId = z.infer<typeof ObjectIdSchema>;
