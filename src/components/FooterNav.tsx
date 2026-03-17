@@ -1,17 +1,12 @@
 import { Link } from '@tanstack/react-router';
-import {
-  FiHome,
-  FiTrash2,
-  FiTruck,
-  FiUserCheck,
-  FiUsers
-} from 'react-icons/fi';
+import { FaStore } from 'react-icons/fa';
+import { FiHome, FiTrash2, FiUserCheck, FiUsers } from 'react-icons/fi';
 
 const navItems = [
   { path: '/', icon: FiHome, label: 'Home' },
   { path: '/staffs', icon: FiUsers, label: 'Staff' },
   { path: '/customers', icon: FiUserCheck, label: 'Customer' },
-  { path: '/stores', icon: FiTruck, label: 'Store' },
+  { path: '/stores', icon: FaStore, label: 'Store' },
   { path: '/recycle', icon: FiTrash2, label: 'Recycle' }
 ];
 
