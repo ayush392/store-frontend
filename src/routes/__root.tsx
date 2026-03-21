@@ -13,7 +13,7 @@ function RootLayoutComponent() {
       <Header />
 
       {/* Main Content */}
-      <main className="flex-1 px-4 py-4 pb-20">
+      <main className="flex-1 px-4 py-4">
         <Outlet />
       </main>
 

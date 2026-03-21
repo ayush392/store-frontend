@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { FormInputProps } from '../../shared/types';
 
 interface NumberInputProps extends FormInputProps {
-  placeholder: string;
+  placeholder?: string;
 }
 
 export const NumberInput = ({
