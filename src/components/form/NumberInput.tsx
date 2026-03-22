@@ -16,7 +16,7 @@ export const NumberInput = ({
   const resolvedValue = Number(field.state.value ?? 0);
   const [internalValue, setInternalValue] = useState(String(resolvedValue));
   const resolvedError =
-    error ?? (isTouched && errors.length > 0 ? errors[0] : '');
+    error ?? (isTouched && errors.length > 0 ? errors[0]?.message : '');
 
   // Keeps typing fluid while still syncing with form-level resets/updates.
   useEffect(() => {

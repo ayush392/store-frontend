@@ -16,7 +16,7 @@ export const TextArea = ({
   const { isTouched, errors } = field.state.meta;
   const resolvedValue = String(field.state.value ?? '');
   const resolvedError =
-    error ?? (isTouched && errors.length > 0 ? errors[0] : '');
+    error ?? (isTouched && errors.length > 0 ? errors[0]?.message : '');
 
   return (
     <div>
