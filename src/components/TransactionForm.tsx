@@ -23,9 +23,9 @@ export const TransactionForm = ({ name }: Props) => {
 
   const form = useForm({
     defaultValues: {
-      transactionType: Transaction.TransactionTypeEnum.options[1],
+      transactionType: Transaction.TransactionTypeEnum.options[0],
       amount: 0,
-      date: new Date().toISOString().slice(0, 10),
+      date: new Date().toLocaleDateString('en-CA'),
       note: ''
     },
     onSubmit: async ({ value }) => {

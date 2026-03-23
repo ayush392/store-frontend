@@ -14,10 +14,10 @@ export function TransactionPage({ mode, accountId }: Props) {
   const title = mode === 'edit' ? 'Edit Transaction' : 'Create Transaction';
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['basic', accountId],
+    queryKey: ['account', accountId, 'basic'],
     queryFn: () => fetcher<Account>(`/account/${accountId}/basic`),
     staleTime: 60 * 60 * 1000,
-    enabled: !!accountId
+    enabled: !!accountId && mode === 'create'
   });
 
   if (mode === 'edit') {
@@ -40,10 +40,18 @@ export function TransactionPage({ mode, accountId }: Props) {
     );
   }
 
+  if (!data) {
+    return (
+      <PageLayout title={title}>
+        <div>Account not found</div>
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout title={title}>
       <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 space-y-5">
-        <TransactionForm name={data?.name ?? '...'} />
+        <TransactionForm name={data.name} />
       </div>
     </PageLayout>
   );

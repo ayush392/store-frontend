@@ -30,11 +30,11 @@ const getMessage = (type: TransactionType, amount: number, name: string) => {
     return `Advance: you gave ${amountText} to ${name}.`;
   }
 
-  return `Transaction entry for ${name}.`;
+  return `Transaction of ${amountText} for ${name}.`;
 };
 
 export const TransactionMessage = ({ amount, type, name }: Props) => {
-  if (!type || !amount) {
+  if (!type || amount <= 0) {
     return null;
   }
   return (

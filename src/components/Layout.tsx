@@ -15,8 +15,15 @@ export const PageLayout = ({ title, children, description }: Props) => {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <button
-          onClick={() => router.history.back()}
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.history.back();
+            } else {
+              router.navigate({ to: '/' });
+            }
+          }}
           className="p-2 text-gray-600 rounded-lg hover:bg-gray-100"
+          type="button"
         >
           <FiArrowLeft size={20} />
         </button>
