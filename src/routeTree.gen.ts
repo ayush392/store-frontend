@@ -13,9 +13,15 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as StoresIndexRouteImport } from './routes/stores/index'
 import { Route as StaffsIndexRouteImport } from './routes/staffs/index'
 import { Route as CustomersIndexRouteImport } from './routes/customers/index'
-import { Route as StoresStoreIdRouteImport } from './routes/stores/$storeId'
-import { Route as StaffsStaffIdRouteImport } from './routes/staffs/$staffId'
-import { Route as CustomersCustomerIdRouteImport } from './routes/customers/$customerId'
+import { Route as StoresStoreIdIndexRouteImport } from './routes/stores/$storeId/index'
+import { Route as StaffsStaffIdIndexRouteImport } from './routes/staffs/$staffId/index'
+import { Route as CustomersCustomerIdIndexRouteImport } from './routes/customers/$customerId/index'
+import { Route as StoresStoreIdTransactionsNewRouteImport } from './routes/stores/$storeId/transactions/new'
+import { Route as StaffsStaffIdTransactionsNewRouteImport } from './routes/staffs/$staffId/transactions/new'
+import { Route as CustomersCustomerIdTransactionsNewRouteImport } from './routes/customers/$customerId/transactions/new'
+import { Route as StoresStoreIdTransactionsTxIdEditRouteImport } from './routes/stores/$storeId/transactions/$txId.edit'
+import { Route as StaffsStaffIdTransactionsTxIdEditRouteImport } from './routes/staffs/$staffId/transactions/$txId.edit'
+import { Route as CustomersCustomerIdTransactionsTxIdEditRouteImport } from './routes/customers/$customerId/transactions/$txId.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -37,88 +43,167 @@ const CustomersIndexRoute = CustomersIndexRouteImport.update({
   path: '/customers/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StoresStoreIdRoute = StoresStoreIdRouteImport.update({
-  id: '/stores/$storeId',
-  path: '/stores/$storeId',
+const StoresStoreIdIndexRoute = StoresStoreIdIndexRouteImport.update({
+  id: '/stores/$storeId/',
+  path: '/stores/$storeId/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StaffsStaffIdRoute = StaffsStaffIdRouteImport.update({
-  id: '/staffs/$staffId',
-  path: '/staffs/$staffId',
+const StaffsStaffIdIndexRoute = StaffsStaffIdIndexRouteImport.update({
+  id: '/staffs/$staffId/',
+  path: '/staffs/$staffId/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CustomersCustomerIdRoute = CustomersCustomerIdRouteImport.update({
-  id: '/customers/$customerId',
-  path: '/customers/$customerId',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const CustomersCustomerIdIndexRoute =
+  CustomersCustomerIdIndexRouteImport.update({
+    id: '/customers/$customerId/',
+    path: '/customers/$customerId/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const StoresStoreIdTransactionsNewRoute =
+  StoresStoreIdTransactionsNewRouteImport.update({
+    id: '/stores/$storeId/transactions/new',
+    path: '/stores/$storeId/transactions/new',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const StaffsStaffIdTransactionsNewRoute =
+  StaffsStaffIdTransactionsNewRouteImport.update({
+    id: '/staffs/$staffId/transactions/new',
+    path: '/staffs/$staffId/transactions/new',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CustomersCustomerIdTransactionsNewRoute =
+  CustomersCustomerIdTransactionsNewRouteImport.update({
+    id: '/customers/$customerId/transactions/new',
+    path: '/customers/$customerId/transactions/new',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const StoresStoreIdTransactionsTxIdEditRoute =
+  StoresStoreIdTransactionsTxIdEditRouteImport.update({
+    id: '/stores/$storeId/transactions/$txId/edit',
+    path: '/stores/$storeId/transactions/$txId/edit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const StaffsStaffIdTransactionsTxIdEditRoute =
+  StaffsStaffIdTransactionsTxIdEditRouteImport.update({
+    id: '/staffs/$staffId/transactions/$txId/edit',
+    path: '/staffs/$staffId/transactions/$txId/edit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CustomersCustomerIdTransactionsTxIdEditRoute =
+  CustomersCustomerIdTransactionsTxIdEditRouteImport.update({
+    id: '/customers/$customerId/transactions/$txId/edit',
+    path: '/customers/$customerId/transactions/$txId/edit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/customers/$customerId': typeof CustomersCustomerIdRoute
-  '/staffs/$staffId': typeof StaffsStaffIdRoute
-  '/stores/$storeId': typeof StoresStoreIdRoute
   '/customers/': typeof CustomersIndexRoute
   '/staffs/': typeof StaffsIndexRoute
   '/stores/': typeof StoresIndexRoute
+  '/customers/$customerId/': typeof CustomersCustomerIdIndexRoute
+  '/staffs/$staffId/': typeof StaffsStaffIdIndexRoute
+  '/stores/$storeId/': typeof StoresStoreIdIndexRoute
+  '/customers/$customerId/transactions/new': typeof CustomersCustomerIdTransactionsNewRoute
+  '/staffs/$staffId/transactions/new': typeof StaffsStaffIdTransactionsNewRoute
+  '/stores/$storeId/transactions/new': typeof StoresStoreIdTransactionsNewRoute
+  '/customers/$customerId/transactions/$txId/edit': typeof CustomersCustomerIdTransactionsTxIdEditRoute
+  '/staffs/$staffId/transactions/$txId/edit': typeof StaffsStaffIdTransactionsTxIdEditRoute
+  '/stores/$storeId/transactions/$txId/edit': typeof StoresStoreIdTransactionsTxIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/customers/$customerId': typeof CustomersCustomerIdRoute
-  '/staffs/$staffId': typeof StaffsStaffIdRoute
-  '/stores/$storeId': typeof StoresStoreIdRoute
   '/customers': typeof CustomersIndexRoute
   '/staffs': typeof StaffsIndexRoute
   '/stores': typeof StoresIndexRoute
+  '/customers/$customerId': typeof CustomersCustomerIdIndexRoute
+  '/staffs/$staffId': typeof StaffsStaffIdIndexRoute
+  '/stores/$storeId': typeof StoresStoreIdIndexRoute
+  '/customers/$customerId/transactions/new': typeof CustomersCustomerIdTransactionsNewRoute
+  '/staffs/$staffId/transactions/new': typeof StaffsStaffIdTransactionsNewRoute
+  '/stores/$storeId/transactions/new': typeof StoresStoreIdTransactionsNewRoute
+  '/customers/$customerId/transactions/$txId/edit': typeof CustomersCustomerIdTransactionsTxIdEditRoute
+  '/staffs/$staffId/transactions/$txId/edit': typeof StaffsStaffIdTransactionsTxIdEditRoute
+  '/stores/$storeId/transactions/$txId/edit': typeof StoresStoreIdTransactionsTxIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/customers/$customerId': typeof CustomersCustomerIdRoute
-  '/staffs/$staffId': typeof StaffsStaffIdRoute
-  '/stores/$storeId': typeof StoresStoreIdRoute
   '/customers/': typeof CustomersIndexRoute
   '/staffs/': typeof StaffsIndexRoute
   '/stores/': typeof StoresIndexRoute
+  '/customers/$customerId/': typeof CustomersCustomerIdIndexRoute
+  '/staffs/$staffId/': typeof StaffsStaffIdIndexRoute
+  '/stores/$storeId/': typeof StoresStoreIdIndexRoute
+  '/customers/$customerId/transactions/new': typeof CustomersCustomerIdTransactionsNewRoute
+  '/staffs/$staffId/transactions/new': typeof StaffsStaffIdTransactionsNewRoute
+  '/stores/$storeId/transactions/new': typeof StoresStoreIdTransactionsNewRoute
+  '/customers/$customerId/transactions/$txId/edit': typeof CustomersCustomerIdTransactionsTxIdEditRoute
+  '/staffs/$staffId/transactions/$txId/edit': typeof StaffsStaffIdTransactionsTxIdEditRoute
+  '/stores/$storeId/transactions/$txId/edit': typeof StoresStoreIdTransactionsTxIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/customers/$customerId'
-    | '/staffs/$staffId'
-    | '/stores/$storeId'
     | '/customers/'
     | '/staffs/'
     | '/stores/'
+    | '/customers/$customerId/'
+    | '/staffs/$staffId/'
+    | '/stores/$storeId/'
+    | '/customers/$customerId/transactions/new'
+    | '/staffs/$staffId/transactions/new'
+    | '/stores/$storeId/transactions/new'
+    | '/customers/$customerId/transactions/$txId/edit'
+    | '/staffs/$staffId/transactions/$txId/edit'
+    | '/stores/$storeId/transactions/$txId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/customers/$customerId'
-    | '/staffs/$staffId'
-    | '/stores/$storeId'
     | '/customers'
     | '/staffs'
     | '/stores'
-  id:
-    | '__root__'
-    | '/'
     | '/customers/$customerId'
     | '/staffs/$staffId'
     | '/stores/$storeId'
+    | '/customers/$customerId/transactions/new'
+    | '/staffs/$staffId/transactions/new'
+    | '/stores/$storeId/transactions/new'
+    | '/customers/$customerId/transactions/$txId/edit'
+    | '/staffs/$staffId/transactions/$txId/edit'
+    | '/stores/$storeId/transactions/$txId/edit'
+  id:
+    | '__root__'
+    | '/'
     | '/customers/'
     | '/staffs/'
     | '/stores/'
+    | '/customers/$customerId/'
+    | '/staffs/$staffId/'
+    | '/stores/$storeId/'
+    | '/customers/$customerId/transactions/new'
+    | '/staffs/$staffId/transactions/new'
+    | '/stores/$storeId/transactions/new'
+    | '/customers/$customerId/transactions/$txId/edit'
+    | '/staffs/$staffId/transactions/$txId/edit'
+    | '/stores/$storeId/transactions/$txId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CustomersCustomerIdRoute: typeof CustomersCustomerIdRoute
-  StaffsStaffIdRoute: typeof StaffsStaffIdRoute
-  StoresStoreIdRoute: typeof StoresStoreIdRoute
   CustomersIndexRoute: typeof CustomersIndexRoute
   StaffsIndexRoute: typeof StaffsIndexRoute
   StoresIndexRoute: typeof StoresIndexRoute
+  CustomersCustomerIdIndexRoute: typeof CustomersCustomerIdIndexRoute
+  StaffsStaffIdIndexRoute: typeof StaffsStaffIdIndexRoute
+  StoresStoreIdIndexRoute: typeof StoresStoreIdIndexRoute
+  CustomersCustomerIdTransactionsNewRoute: typeof CustomersCustomerIdTransactionsNewRoute
+  StaffsStaffIdTransactionsNewRoute: typeof StaffsStaffIdTransactionsNewRoute
+  StoresStoreIdTransactionsNewRoute: typeof StoresStoreIdTransactionsNewRoute
+  CustomersCustomerIdTransactionsTxIdEditRoute: typeof CustomersCustomerIdTransactionsTxIdEditRoute
+  StaffsStaffIdTransactionsTxIdEditRoute: typeof StaffsStaffIdTransactionsTxIdEditRoute
+  StoresStoreIdTransactionsTxIdEditRoute: typeof StoresStoreIdTransactionsTxIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -151,25 +236,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/stores/$storeId': {
-      id: '/stores/$storeId'
+    '/stores/$storeId/': {
+      id: '/stores/$storeId/'
       path: '/stores/$storeId'
-      fullPath: '/stores/$storeId'
-      preLoaderRoute: typeof StoresStoreIdRouteImport
+      fullPath: '/stores/$storeId/'
+      preLoaderRoute: typeof StoresStoreIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/staffs/$staffId': {
-      id: '/staffs/$staffId'
+    '/staffs/$staffId/': {
+      id: '/staffs/$staffId/'
       path: '/staffs/$staffId'
-      fullPath: '/staffs/$staffId'
-      preLoaderRoute: typeof StaffsStaffIdRouteImport
+      fullPath: '/staffs/$staffId/'
+      preLoaderRoute: typeof StaffsStaffIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/customers/$customerId': {
-      id: '/customers/$customerId'
+    '/customers/$customerId/': {
+      id: '/customers/$customerId/'
       path: '/customers/$customerId'
-      fullPath: '/customers/$customerId'
-      preLoaderRoute: typeof CustomersCustomerIdRouteImport
+      fullPath: '/customers/$customerId/'
+      preLoaderRoute: typeof CustomersCustomerIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stores/$storeId/transactions/new': {
+      id: '/stores/$storeId/transactions/new'
+      path: '/stores/$storeId/transactions/new'
+      fullPath: '/stores/$storeId/transactions/new'
+      preLoaderRoute: typeof StoresStoreIdTransactionsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staffs/$staffId/transactions/new': {
+      id: '/staffs/$staffId/transactions/new'
+      path: '/staffs/$staffId/transactions/new'
+      fullPath: '/staffs/$staffId/transactions/new'
+      preLoaderRoute: typeof StaffsStaffIdTransactionsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customers/$customerId/transactions/new': {
+      id: '/customers/$customerId/transactions/new'
+      path: '/customers/$customerId/transactions/new'
+      fullPath: '/customers/$customerId/transactions/new'
+      preLoaderRoute: typeof CustomersCustomerIdTransactionsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stores/$storeId/transactions/$txId/edit': {
+      id: '/stores/$storeId/transactions/$txId/edit'
+      path: '/stores/$storeId/transactions/$txId/edit'
+      fullPath: '/stores/$storeId/transactions/$txId/edit'
+      preLoaderRoute: typeof StoresStoreIdTransactionsTxIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staffs/$staffId/transactions/$txId/edit': {
+      id: '/staffs/$staffId/transactions/$txId/edit'
+      path: '/staffs/$staffId/transactions/$txId/edit'
+      fullPath: '/staffs/$staffId/transactions/$txId/edit'
+      preLoaderRoute: typeof StaffsStaffIdTransactionsTxIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customers/$customerId/transactions/$txId/edit': {
+      id: '/customers/$customerId/transactions/$txId/edit'
+      path: '/customers/$customerId/transactions/$txId/edit'
+      fullPath: '/customers/$customerId/transactions/$txId/edit'
+      preLoaderRoute: typeof CustomersCustomerIdTransactionsTxIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -177,12 +304,22 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CustomersCustomerIdRoute: CustomersCustomerIdRoute,
-  StaffsStaffIdRoute: StaffsStaffIdRoute,
-  StoresStoreIdRoute: StoresStoreIdRoute,
   CustomersIndexRoute: CustomersIndexRoute,
   StaffsIndexRoute: StaffsIndexRoute,
   StoresIndexRoute: StoresIndexRoute,
+  CustomersCustomerIdIndexRoute: CustomersCustomerIdIndexRoute,
+  StaffsStaffIdIndexRoute: StaffsStaffIdIndexRoute,
+  StoresStoreIdIndexRoute: StoresStoreIdIndexRoute,
+  CustomersCustomerIdTransactionsNewRoute:
+    CustomersCustomerIdTransactionsNewRoute,
+  StaffsStaffIdTransactionsNewRoute: StaffsStaffIdTransactionsNewRoute,
+  StoresStoreIdTransactionsNewRoute: StoresStoreIdTransactionsNewRoute,
+  CustomersCustomerIdTransactionsTxIdEditRoute:
+    CustomersCustomerIdTransactionsTxIdEditRoute,
+  StaffsStaffIdTransactionsTxIdEditRoute:
+    StaffsStaffIdTransactionsTxIdEditRoute,
+  StoresStoreIdTransactionsTxIdEditRoute:
+    StoresStoreIdTransactionsTxIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

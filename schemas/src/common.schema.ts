@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 //NOTE: this file contains the validation schemas which are used across the app
 
-const objectIdRegex = /^[a-fA-F0-9]{24}$/;
+export const objectIdRegex = /^[a-fA-F0-9]{24}$/;
 export const ObjectIdSchema = z
   .string()
   .trim()

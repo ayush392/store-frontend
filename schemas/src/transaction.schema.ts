@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DateTimeSchema, ObjectIdSchema } from './common.schema.js';
+import { DateOnlySchema, ObjectIdSchema } from './common.schema.js';
 
 export const TransactionTypeEnum = z.enum([
   'UDHAAR',
@@ -14,7 +14,7 @@ export const CreateTransactionSchema = z.object({
   amount: z
     .int('Amount should be integer')
     .positive('Amount must be greater than 0'),
-  date: DateTimeSchema,
+  date: DateOnlySchema,
   note: z.string().trim().default('')
 });
 
