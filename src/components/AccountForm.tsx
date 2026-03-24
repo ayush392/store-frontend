@@ -1,18 +1,35 @@
+import { type AccountType } from '@store/schemas';
 import { useForm } from '@tanstack/react-form';
+import { getAccountFormConfig } from '../shared/utils/accountFormConfig';
 import { DateInput } from './form/DateInput';
 import { NumberInput } from './form/NumberInput';
 import { SelectInput } from './form/SelectInput';
 import { TextArea } from './form/TextArea';
 import { TextInput } from './form/TextInput';
 
-export const AccountForm = () => {
+type Props = {
+  accountType: AccountType;
+};
+
+export const AccountForm = ({ accountType }: Props) => {
+  const config = getAccountFormConfig(accountType);
   const form = useForm({
-    defaultValues: {}
+    defaultValues: config.defaultValues,
+    validators: {
+      onSubmit: config.schema,
+      onBlur: config.schema
+    }
   });
 
   const { Field } = form;
   return (
-    <form>
+    <form
+      className="space-y-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
+    >
       <Field name="name">
         {(field) => (
           <TextInput label="Name" field={field} placeholder="Enter name" />
@@ -31,7 +48,7 @@ export const AccountForm = () => {
 
       <Field name="phone">
         {(field) => (
-          <NumberInput
+          <TextInput
             label="Phone Number"
             field={field}
             placeholder="Phone Number"
@@ -40,25 +57,29 @@ export const AccountForm = () => {
       </Field>
 
       {/* staff fields */}
-      <div className="grid grid-cols-2 gap-4">
-        <Field name="employment.salaryType">
-          {(field) => (
-            <SelectInput
-              label="Salary Type"
-              field={field}
-              options={['DAILY', 'MONTHLY']}
-            />
-          )}
-        </Field>
+      {accountType === 'STAFF' && (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <Field name="employment.salaryType">
+              {(field) => (
+                <SelectInput
+                  label="Salary Type"
+                  field={field}
+                  options={['DAILY', 'MONTHLY']}
+                />
+              )}
+            </Field>
 
-        <Field name="employment.salary">
-          {(field) => <NumberInput label="Salary" field={field} />}
-        </Field>
-      </div>
+            <Field name="employment.salary">
+              {(field) => <NumberInput label="Salary" field={field} />}
+            </Field>
+          </div>
 
-      <Field name="employment.joinDate">
-        {(field) => <DateInput label="Join Date" field={field} />}
-      </Field>
+          <Field name="employment.joinDate">
+            {(field) => <DateInput label="Join Date" field={field} />}
+          </Field>
+        </>
+      )}
 
       <Field name="address">
         {(field) => (

@@ -5,13 +5,13 @@ export const AccountTypeEnum = z.enum(['CUSTOMER', 'STORE', 'STAFF']);
 
 export const BaseAccountSchema = z.object({
   name: z.string().trim().min(3, 'Name must be at least 3 characters long'),
-  displayName: z.string().trim().optional().default(''),
+  displayName: z.string().trim().default(''),
   phone: PhoneSchema,
   address: z
     .string()
     .trim()
     .min(5, 'Address must be at least 5 characters long'),
-  notes: z.string().trim().optional()
+  notes: z.string().trim().default('')
 });
 
 export const CreateAccountSchema = BaseAccountSchema.extend({
