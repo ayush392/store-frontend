@@ -1,8 +1,7 @@
 import type { TransactionType } from '@store/schemas';
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useState } from 'react';
-import { FiChevronDown } from 'react-icons/fi';
+import { SectionHeader } from '../components/SectionHeader';
 import WeeklyOverview from '../components/WeeklyOverview';
 import { fetcher } from '../lib/fetcher';
 import { formatAmount, formatEnum } from '../shared/format';
@@ -21,8 +20,6 @@ const actions = [
 ] as const;
 
 function HomePage() {
-  const [filter, setFilter] = useState('all');
-
   const { data, isLoading, error } = useQuery({
     queryKey: ['recent'],
     queryFn: () => fetcher<RecentTrans[]>('/transaction/recent'),
@@ -68,31 +65,10 @@ function HomePage() {
       <WeeklyOverview />
 
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Recent Transactions
-            </h3>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="appearance-none bg-white text-sm border border-gray-300 rounded-lg px-3 py-2 pr-8 min-w-30"
-                  style={{ cursor: 'pointer' }}
-                >
-                  <option value="all">All</option>
-                  <option value="staff">Staff</option>
-                  <option value="customer">Customer</option>
-                  <option value="store">Store</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                  <FiChevronDown className=" text-gray-400" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <SectionHeader
+          title="Recent Transactions"
+          filterOptions={['all', 'staff', 'customer', 'store']}
+        />
 
         <div className="divide-y divide-gray-200">
           {data &&
