@@ -1,10 +1,14 @@
-import type { TransactionType } from '@store/schemas';
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { SectionHeader } from '../components/SectionHeader';
 import WeeklyOverview from '../components/WeeklyOverview';
 import { fetcher } from '../lib/fetcher';
-import { formatAmount, formatEnum } from '../shared/format';
+import {
+  formatAmount,
+  formatEnum,
+  getAmountColor,
+  getAmountSymbol
+} from '../shared/format';
 import { CustomerIcon, StaffIcon, StoreIcon } from '../shared/icons';
 import type { RecentTrans } from '../shared/types';
 
@@ -25,15 +29,6 @@ function HomePage() {
     queryFn: () => fetcher<RecentTrans[]>('/transaction/recent'),
     staleTime: 5 * 60 * 1000
   });
-
-  const getAmountColor = (type: TransactionType) => {
-    if (type === 'UDHAAR' || type === 'ADVANCE') {
-      return 'text-red-500';
-    } else if (type === 'PAYMENT') {
-      return 'text-blue-600';
-    }
-    return 'text-gray-600';
-  };
 
   const getNavigationLink = (trans: RecentTrans) => {
     const { accountType, _id } = trans.account;
@@ -103,7 +98,7 @@ function HomePage() {
                       transaction.transactionType
                     )}`}
                   >
-                    {transaction.amountChange < 0 ? '+' : '-'}
+                    {getAmountSymbol(transaction.amountChange)}
                     {formatAmount(transaction.amount)}
                   </div>
                   <div className="text-sm text-gray-500 capitalize">

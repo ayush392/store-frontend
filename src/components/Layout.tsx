@@ -29,7 +29,7 @@ export const PageLayout = ({ title, children, description }: Props) => {
         </button>
 
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
+          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
 
           {description && (
             <p className="text-xs text-gray-500">{description}</p>
