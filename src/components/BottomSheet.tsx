@@ -97,7 +97,7 @@ export function BottomSheet({ title, children, onClose }: Props) {
 
         {/* Header */}
         <div className="px-4 pb-3 border-b border-gray-400 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-800">{title}</h3>
+          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
           <button
             onClick={closeSheet}
             className="text-gray-400 hover:text-gray-600"
