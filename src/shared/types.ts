@@ -1,4 +1,10 @@
-import type { AccountType, TransactionType } from '@store/schemas';
+import type {
+  AccountType,
+  AttendanceType,
+  ObjectId,
+  SalaryType,
+  TransactionType
+} from '@store/schemas';
 import type { AnyFieldApi } from '@tanstack/react-form';
 
 export interface FormInputProps {
@@ -14,9 +20,17 @@ export type Account = {
   name: string;
   displayName: string;
   phone: string;
+  address: string;
   accountType: AccountType;
   currentOutstanding: number;
+  notes: string;
   isActive: boolean;
+};
+
+export type Employment = {
+  salary: number;
+  salaryType: SalaryType;
+  joinDate: string;
 };
 
 export type RecentTrans = {
@@ -36,4 +50,33 @@ type Point = {
 export type Chart = {
   totalDue: number;
   chartData: Point[];
+};
+
+export type Staff = {
+  employmentId: ObjectId;
+  account: {
+    _id: string;
+    name: string;
+    currentOutstanding: number;
+    isActive: boolean;
+  };
+  salary: number;
+  salaryType: SalaryType;
+  status: AttendanceType;
+};
+
+export type Transactions = {
+  _id: string;
+  accountId: string;
+  transactionType: TransactionType;
+  amount: number;
+  amountChange: number;
+  date: string;
+  note: string;
+};
+
+export type UserDetails = {
+  profile: Account;
+  employment?: Employment[];
+  transactions: Transactions[];
 };

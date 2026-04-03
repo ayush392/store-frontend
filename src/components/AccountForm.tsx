@@ -1,5 +1,9 @@
 import { type AccountType } from '@store/schemas';
 import { useForm } from '@tanstack/react-form';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetcher } from '../lib/fetcher';
+import { notifyError, notifySuccess } from '../lib/toast';
+import { formatEnum } from '../shared/format';
 import { getAccountFormConfig } from '../shared/utils/accountFormConfig';
 import { DateInput } from './form/DateInput';
 import { NumberInput } from './form/NumberInput';
@@ -12,12 +16,35 @@ type Props = {
 };
 
 export const AccountForm = ({ accountType }: Props) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (formData: typeof config.defaultValues) =>
+      fetcher(
+        accountType === 'STAFF' ? '/staff' : '/account',
+        'POST',
+        formData
+      ),
+    onSuccess: () => {
+      const accType = formatEnum(accountType);
+      notifySuccess(`New ${accType} created`);
+      queryClient.invalidateQueries({ queryKey: [accType] });
+    },
+    onError: (error) => {
+      notifyError(error.message);
+    }
+  });
+
   const config = getAccountFormConfig(accountType);
   const form = useForm({
     defaultValues: config.defaultValues,
     validators: {
       onSubmit: config.schema,
       onBlur: config.schema
+    },
+    onSubmit: ({ value, formApi }) => {
+      mutate(value);
+      formApi.reset();
     }
   });
 
@@ -98,20 +125,13 @@ export const AccountForm = ({ accountType }: Props) => {
         )}
       </Field>
 
-      <div className="flex space-x-3 pt-4">
-        <button
-          type="button"
-          className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-lg text-sm font-medium"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60"
-        >
-          Save
-        </button>
-      </div>
+      <button
+        disabled={isPending}
+        type="submit"
+        className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60"
+      >
+        Save
+      </button>
     </form>
   );
 };

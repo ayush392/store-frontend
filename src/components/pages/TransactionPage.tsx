@@ -51,7 +51,7 @@ export function TransactionPage({ mode, accountId }: Props) {
   return (
     <PageLayout title={title}>
       <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 space-y-5">
-        <TransactionForm name={data.name} />
+        <TransactionForm name={data.name} accountId={accountId} />
       </div>
     </PageLayout>
   );

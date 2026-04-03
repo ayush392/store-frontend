@@ -1,5 +1,8 @@
 import { Form, Transaction } from '@store/schemas';
 import { useForm, useStore } from '@tanstack/react-form';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetcher } from '../lib/fetcher';
+import { notifyError, notifySuccess } from '../lib/toast';
 import { DateInput } from './form/DateInput';
 import { NumberInput } from './form/NumberInput';
 import { SelectInput } from './form/SelectInput';
@@ -8,28 +11,36 @@ import { TransactionMessage } from './TransactionMessage';
 
 type Props = {
   name: string;
+  accountId: string;
 };
 
-export const TransactionForm = ({ name }: Props) => {
-  // const mutation = useMutation({
-  //   mutationFn: createTransaction,
-  //   onSuccess: (data) => {
-  //     console.log('Success:', data);
-  //   },
-  //   onError: (error) => {
-  //     console.error('Error:', error);
-  //   },
-  // });
+export const TransactionForm = ({ name, accountId }: Props) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (formData: Form.CreateTransaction) =>
+      fetcher(`/transaction`, 'POST', { ...formData, accountId }),
+    onSuccess: () => {
+      notifySuccess('Transaction created for ' + name);
+      queryClient.invalidateQueries({ queryKey: ['staff', accountId] });
+      queryClient.invalidateQueries({ queryKey: ['customer', accountId] });
+      queryClient.invalidateQueries({ queryKey: ['store', accountId] });
+    },
+    onError: (error) => {
+      notifyError(error.message);
+    }
+  });
 
   const form = useForm({
     defaultValues: {
-      transactionType: Transaction.TransactionTypeEnum.options[0],
+      transactionType: Transaction.TransactionTypeEnum.options[0]!,
       amount: 0,
       date: new Date().toLocaleDateString('en-CA'),
       note: ''
     },
-    onSubmit: async ({ value }) => {
-      console.log('Submitted values:', value);
+    onSubmit: ({ value, formApi }) => {
+      mutate(value);
+      formApi.reset();
     },
     validators: {
       onSubmit: Form.CreateTransactionSchema,
@@ -76,20 +87,13 @@ export const TransactionForm = ({ name }: Props) => {
         )}
       </Field>
 
-      <div className="flex space-x-3 pt-4">
-        <button
-          type="button"
-          className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-lg text-sm font-medium"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60"
-        >
-          Save
-        </button>
-      </div>
+      <button
+        disabled={isPending}
+        type="submit"
+        className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60"
+      >
+        Save
+      </button>
     </form>
   );
 };

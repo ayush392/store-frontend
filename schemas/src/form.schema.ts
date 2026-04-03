@@ -41,3 +41,8 @@ export const CreateStaffSchema = CreateAccountSchema.omit({
       .positive('Amount must be greater than 0')
   })
 });
+
+export type CreateTransaction = z.infer<typeof CreateTransactionSchema>;
+export type UpdateTransaction = z.infer<typeof UpdateTransactionSchema>;
+export type CreateAccount = z.infer<typeof CreateAccountSchema>;
+export type CreateStaff = z.infer<typeof CreateStaffSchema>;
