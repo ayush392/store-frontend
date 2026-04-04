@@ -1,3 +1,5 @@
+import { redirectToLogin } from '../shared/navigation';
+
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export const fetcher = async <T>(
@@ -39,6 +41,9 @@ export const fetcher = async <T>(
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     console.log({ errorData });
+    if (errorData.code === 'UNAUTHORIZED') {
+      redirectToLogin();
+    }
     throw new Error(errorData.message || 'Network error');
   }
 
