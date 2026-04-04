@@ -1,7 +1,7 @@
 import type { AttendanceType } from '@store/schemas';
 import { useState, type JSX } from 'react';
 import { FiCheckCircle, FiClock, FiXCircle } from 'react-icons/fi';
-import { formatDate, formatEnum } from '../shared/format';
+import { formatDate } from '../shared/format';
 
 const statusColors: Record<
   AttendanceType,
@@ -71,7 +71,7 @@ export function UpdateAttendance({
         {isLoading
           ? 'Saving...'
           : status
-            ? 'Mark as ' + formatEnum(status)
+            ? 'Mark as ' + statusColors[status].label
             : 'Save'}
       </button>
     </div>

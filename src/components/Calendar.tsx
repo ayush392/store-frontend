@@ -1,3 +1,4 @@
+import type { AttendanceType } from '@store/schemas';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
@@ -5,8 +6,6 @@ import { fetcher } from '../lib/fetcher';
 import { notifyError, notifySuccess } from '../lib/toast';
 import { BottomSheet } from './BottomSheet';
 import { UpdateAttendance } from './UpdateAttendance';
-
-type AttendanceType = 'PRESENT' | 'ABSENT' | 'HALF';
 
 type Attendance = {
   accountId: string;
@@ -188,11 +187,16 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
 
           {Array.from({ length: daysInMonth }, (_, i) => {
             const dateObj = new Date(currentYear, currentMonth, i + 1);
+            const isFuture = dateObj > today;
             const dateKey = formatDateKey(dateObj);
             const status = attendanceMap[dateKey];
 
             const isSelected = selectedDate === dateKey;
-            const bgColor = status ? statusColors[status].bg : 'bg-gray-200';
+            const bgColor = isFuture
+              ? 'bg-gray-200 opacity-50'
+              : status
+                ? statusColors[status].bg
+                : 'bg-gray-200';
             const textColor = status
               ? statusColors[status].text
               : 'text-gray-800';
@@ -201,7 +205,7 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
             return (
               <div
                 key={i}
-                onClick={() => handleDateClick(dateKey)}
+                onClick={() => !isFuture && handleDateClick(dateKey)}
                 className={`h-8 w-8 flex font-medium items-center justify-center rounded-full ${bgColor} ${textColor} ${selectedClass} text-sm sm:text-base`}
               >
                 {i + 1}
