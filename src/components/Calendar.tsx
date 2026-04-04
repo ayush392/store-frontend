@@ -68,8 +68,12 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
   });
 
   const handleAttendanceUpdate = (newStatus: AttendanceType) => {
+    if (!employmentId) {
+      notifyError('Employment ID is required to update attendance');
+      return;
+    }
     const payload: Attendance = {
-      employmentId: employmentId || '',
+      employmentId,
       accountId,
       date: selectedDate,
       status: newStatus
