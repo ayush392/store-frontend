@@ -1,9 +1,10 @@
-import type { AttendanceType } from '@store/schemas';
-import { useQuery } from '@tanstack/react-query';
+import type { AttendanceType, BulkAttendance } from '@store/schemas';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { FiCheck, FiClock, FiDollarSign, FiX } from 'react-icons/fi';
 import { fetcher } from '../../lib/fetcher';
+import { notifyError, notifySuccess } from '../../lib/toast';
 import { formatAmount, formatEnum } from '../../shared/format';
 import type { Staff } from '../../shared/types';
 
@@ -12,9 +13,23 @@ export const Route = createFileRoute('/staffs/')({
 });
 
 function StaffsPage() {
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ['staffs'],
     queryFn: () => fetcher<Staff[]>('/staff')
+  });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: BulkAttendance) =>
+      fetcher('/staff/attendance/bulk', 'PATCH', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staffs'] });
+      notifySuccess('Attendance updated');
+      setSelectedStaffs(new Set());
+    },
+    onError: (error) => {
+      notifyError(error.message);
+    }
   });
 
   const [selectedStaffs, setSelectedStaffs] = useState<Set<string>>(new Set());
@@ -30,6 +45,39 @@ function StaffsPage() {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleSelectStaff = (type: 'all' | '', id?: string) => {
+    setSelectedStaffs((prev) => {
+      const newSet = new Set(prev);
+
+      if (type === 'all') {
+        if (newSet.size === data?.length || 0) {
+          return new Set(); // clear all
+        } else {
+          data?.forEach((staff) => newSet.add(staff.employmentId));
+        }
+      } else if (id) {
+        if (newSet.has(id)) newSet.delete(id);
+        else newSet.add(id);
+      }
+
+      return newSet;
+    });
+  };
+
+  const handleBulkAttendance = (status: AttendanceType) => {
+    const staffData = data
+      ?.filter((staff) => selectedStaffs.has(staff.employmentId))
+      .map((staff) => {
+        return {
+          accountId: staff.account._id,
+          employmentId: staff.employmentId,
+          status
+        };
+      });
+
+    if (staffData && staffData.length > 0) mutate(staffData);
   };
 
   if (isLoading) return <div>Loading</div>;
@@ -50,22 +98,25 @@ function StaffsPage() {
           </span>
           <div className="flex space-x-2">
             <button
-              // onClick={() => handleBulkAttendance('present')}
-              className="bg-green-600 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1"
+              disabled={isPending}
+              onClick={() => handleBulkAttendance('PRESENT')}
+              className="bg-green-600 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1 disabled:opacity-60"
             >
               <FiCheck size={14} />
               <span>Present</span>
             </button>
             <button
-              // onClick={() => handleBulkAttendance('absent')}
-              className="bg-red-600 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1"
+              disabled={isPending}
+              onClick={() => handleBulkAttendance('ABSENT')}
+              className="bg-red-600 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1 disabled:opacity-60"
             >
               <FiX size={14} />
               <span>Absent</span>
             </button>
             <button
-              // onClick={() => handleBulkAttendance('halfday')}
-              className="bg-yellow-600 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1"
+              disabled={isPending}
+              onClick={() => handleBulkAttendance('HALF')}
+              className="bg-yellow-600 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1 disabled:opacity-60"
             >
               <FiClock size={14} />
               <span>Half Day</span>
@@ -80,7 +131,7 @@ function StaffsPage() {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-800">Staffs</h3>
             <button
-              // onClick={}
+              onClick={() => handleSelectStaff('all')}
               className="text-sm text-blue-600 font-medium"
             >
               {selectedStaffs.size === data.length
@@ -105,7 +156,7 @@ function StaffsPage() {
                   <input
                     type="checkbox"
                     checked={isSelected}
-                    // onChange={() => handleSelectStaff(staff.id)}
+                    onChange={() => handleSelectStaff('', staff.employmentId)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
 

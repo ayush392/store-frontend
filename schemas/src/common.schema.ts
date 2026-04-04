@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 export const objectIdRegex = /^[a-fA-F0-9]{24}$/;
 export const ObjectIdSchema = z
-  .string()
+  .string('id is not valid or undefined')
   .trim()
   .regex(objectIdRegex, 'Invalid ObjectId format');
 
