@@ -16,6 +16,7 @@ import { Route as CustomersIndexRouteImport } from './routes/customers/index'
 import { Route as StoresNewRouteImport } from './routes/stores/new'
 import { Route as StaffsNewRouteImport } from './routes/staffs/new'
 import { Route as CustomersNewRouteImport } from './routes/customers/new'
+import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as StoresStoreIdIndexRouteImport } from './routes/stores/$storeId/index'
 import { Route as StaffsStaffIdIndexRouteImport } from './routes/staffs/$staffId/index'
 import { Route as CustomersCustomerIdIndexRouteImport } from './routes/customers/$customerId/index'
@@ -62,6 +63,11 @@ const StaffsNewRoute = StaffsNewRouteImport.update({
 const CustomersNewRoute = CustomersNewRouteImport.update({
   id: '/customers/new',
   path: '/customers/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/_auth/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoresStoreIdIndexRoute = StoresStoreIdIndexRouteImport.update({
@@ -134,6 +140,7 @@ const CustomersCustomerIdTransactionsTxIdEditRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof AuthLoginRoute
   '/customers/new': typeof CustomersNewRoute
   '/staffs/new': typeof StaffsNewRoute
   '/stores/new': typeof StoresNewRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof AuthLoginRoute
   '/customers/new': typeof CustomersNewRoute
   '/staffs/new': typeof StaffsNewRoute
   '/stores/new': typeof StoresNewRoute
@@ -177,6 +185,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_auth/login': typeof AuthLoginRoute
   '/customers/new': typeof CustomersNewRoute
   '/staffs/new': typeof StaffsNewRoute
   '/stores/new': typeof StoresNewRoute
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
     | '/customers/new'
     | '/staffs/new'
     | '/stores/new'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
     | '/customers/new'
     | '/staffs/new'
     | '/stores/new'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_auth/login'
     | '/customers/new'
     | '/staffs/new'
     | '/stores/new'
@@ -264,6 +276,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthLoginRoute: typeof AuthLoginRoute
   CustomersNewRoute: typeof CustomersNewRoute
   StaffsNewRoute: typeof StaffsNewRoute
   StoresNewRoute: typeof StoresNewRoute
@@ -333,6 +346,13 @@ declare module '@tanstack/react-router' {
       path: '/customers/new'
       fullPath: '/customers/new'
       preLoaderRoute: typeof CustomersNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stores/$storeId/': {
@@ -424,6 +444,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthLoginRoute: AuthLoginRoute,
   CustomersNewRoute: CustomersNewRoute,
   StaffsNewRoute: StaffsNewRoute,
   StoresNewRoute: StoresNewRoute,
