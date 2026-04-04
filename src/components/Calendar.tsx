@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-import React, { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { fetcher } from '../lib/fetcher';
+import { notifyError, notifySuccess } from '../lib/toast';
 import { BottomSheet } from './BottomSheet';
-import { attendanceData } from './constant';
 import { UpdateAttendance } from './UpdateAttendance';
 
 type AttendanceType = 'PRESENT' | 'ABSENT' | 'HALF';
@@ -16,6 +17,7 @@ type Attendance = {
 
 type Props = {
   accountId: string;
+  employmentId: string | undefined;
 };
 
 const statusColors: Record<
@@ -27,46 +29,62 @@ const statusColors: Record<
   HALF: { bg: 'bg-yellow-200', text: 'text-yellow-800', label: 'Half Day' }
 };
 
-const fetchAttendance = async (
-  accountId: string,
-  month: number,
-  year: number
-) => {
-  const res = await fetch(
-    `/staff/${accountId}/attendance?month=${month}&year=${year}`
-  );
-  if (!res.ok) throw new Error('Failed to fetch attendance');
-  return res.json() as Promise<Attendance[]>;
-};
-
 const formatDateKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
     date.getDate()
   ).padStart(2, '0')}`;
 
-export const Calendar: React.FC<Props> = ({ accountId }) => {
+export const Calendar = ({ accountId, employmentId }: Props) => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(formatDateKey(today));
 
+  const queryClient = useQueryClient();
+
   const { data: attendance = [] } = useQuery({
     queryKey: ['calendar', accountId, currentMonth, currentYear],
-    queryFn: () => fetchAttendance(accountId, currentMonth + 1, currentYear),
+    queryFn: () =>
+      fetcher<Attendance[]>(
+        `/staff/${accountId}/attendance?month=${currentMonth + 1}&year=${currentYear}`
+      ),
     staleTime: 10 * 60 * 1000
   });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: Attendance) =>
+      fetcher('/staff/attendance', 'PATCH', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['calendar', accountId, currentMonth, currentYear]
+      });
+      notifySuccess('Attendance updated');
+      setIsOpen(false);
+    },
+    onError: (error) => {
+      notifyError(error.message);
+    }
+  });
+
+  const handleAttendanceUpdate = (newStatus: AttendanceType) => {
+    const payload: Attendance = {
+      employmentId: employmentId || '',
+      accountId,
+      date: selectedDate,
+      status: newStatus
+    };
+    mutate(payload);
+  };
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstWeekday = new Date(currentYear, currentMonth, 1).getDay();
 
   const attendanceMap = useMemo(() => {
     const map: Record<string, AttendanceType> = {};
-    attendanceData.forEach((item) => {
+    attendance.forEach((item) => {
       const d = new Date(item.date);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-        d.getDate()
-      ).padStart(2, '0')}`;
+      const key = formatDateKey(d);
       map[key] = item.status;
     });
     return map;
@@ -78,7 +96,7 @@ export const Calendar: React.FC<Props> = ({ accountId }) => {
       ABSENT: 0,
       HALF: 0
     };
-    attendanceData.forEach((a) => {
+    attendance.forEach((a) => {
       count[a.status]++;
     });
     return count;
@@ -180,7 +198,7 @@ export const Calendar: React.FC<Props> = ({ accountId }) => {
               <div
                 key={i}
                 onClick={() => handleDateClick(dateKey)}
-                className={`h-8 w-8 flex font-medium items-center justify-center  rounded-full ${bgColor} ${textColor} ${selectedClass} text-sm sm:text-base`}
+                className={`h-8 w-8 flex font-medium items-center justify-center rounded-full ${bgColor} ${textColor} ${selectedClass} text-sm sm:text-base`}
               >
                 {i + 1}
               </div>
@@ -196,8 +214,9 @@ export const Calendar: React.FC<Props> = ({ accountId }) => {
         >
           <UpdateAttendance
             selectedDate={selectedDate}
-            // currentStatus="PRESENT"
-            onSave={() => {}}
+            currentStatus={attendanceMap[selectedDate]}
+            onSave={handleAttendanceUpdate}
+            isLoading={isPending}
           />
         </BottomSheet>
       )}

@@ -88,7 +88,12 @@ function StaffDetailsPage() {
           </div>
         )}
 
-        {activeTab === 'attendance' && <Calendar accountId={staffId} />}
+        {activeTab === 'attendance' && (
+          <Calendar
+            accountId={staffId}
+            employmentId={data?.employment?.[0]?._id}
+          />
+        )}
       </div>
     </PageLayout>
   );

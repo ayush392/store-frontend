@@ -28,6 +28,7 @@ export type Account = {
 };
 
 export type Employment = {
+  _id: string;
   salary: number;
   salaryType: SalaryType;
   joinDate: string;

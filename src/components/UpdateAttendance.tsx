@@ -1,7 +1,7 @@
 import type { AttendanceType } from '@store/schemas';
 import { useState, type JSX } from 'react';
 import { FiCheckCircle, FiClock, FiXCircle } from 'react-icons/fi';
-import { formatDate } from '../shared/format';
+import { formatDate, formatEnum } from '../shared/format';
 
 const statusColors: Record<
   AttendanceType,
@@ -14,19 +14,19 @@ const statusColors: Record<
 
 type UpdateAttendanceProps = {
   selectedDate: string;
-  currentStatus?: AttendanceType;
+  currentStatus: AttendanceType | undefined;
   onSave: (status: AttendanceType) => void;
-  onClose?: () => void;
+  isLoading: boolean;
 };
 
 export function UpdateAttendance({
   selectedDate,
   currentStatus,
   onSave,
-  onClose
+  isLoading
 }: UpdateAttendanceProps) {
-  const [status, setStatus] = useState<AttendanceType | ''>(
-    currentStatus || ''
+  const [status, setStatus] = useState<AttendanceType | undefined>(
+    currentStatus
   );
 
   const options: Array<{ type: AttendanceType; icon: JSX.Element }> = [
@@ -34,14 +34,6 @@ export function UpdateAttendance({
     { type: 'ABSENT', icon: <FiXCircle size={20} /> },
     { type: 'HALF', icon: <FiClock size={20} /> }
   ];
-
-  const handleSave = () => {
-    console.log(status);
-    if (status) {
-      onSave(status);
-      onClose?.();
-    }
-  };
 
   return (
     <div className="p-4 space-y-8">
@@ -72,15 +64,15 @@ export function UpdateAttendance({
       </div>
 
       <button
-        onClick={handleSave}
-        disabled={!status}
-        className={`w-full py-3 rounded-lg font-semibold transition-colors ${
-          status
-            ? 'bg-blue-600 text-white active:bg-blue-700'
-            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-        }`}
+        onClick={() => status && onSave(status)}
+        disabled={currentStatus === status || isLoading}
+        className={`w-full py-3 rounded-lg font-semibold transition-colors bg-blue-600 text-white active:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed`}
       >
-        Save
+        {isLoading
+          ? 'Saving...'
+          : status
+            ? 'Mark as ' + formatEnum(status)
+            : 'Save'}
       </button>
     </div>
   );
