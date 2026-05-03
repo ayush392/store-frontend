@@ -1,5 +1,6 @@
-import type { AccountType, ObjectId } from '@store/schemas';
 import { formatEnum } from '../../shared/format';
+import type { AccountType } from '../../shared/schemas/account.schema';
+import type { ObjectId } from '../../shared/schemas/common.schema';
 import { AccountForm } from '../AccountForm';
 import { PageLayout } from '../Layout';
 

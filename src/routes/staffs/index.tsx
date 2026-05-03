@@ -1,4 +1,3 @@
-import type { AttendanceType, BulkAttendance } from '@store/schemas';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -7,6 +6,7 @@ import { fetcher } from '../../lib/fetcher';
 import { notifyError, notifySuccess } from '../../lib/toast';
 import { formatAmount, formatEnum } from '../../shared/format';
 import type { Staff } from '../../shared/types';
+import type { AttendanceType, BulkAttendance } from '../../shared/schemas/staff.schema';
 
 export const Route = createFileRoute('/staffs/')({
   component: StaffsPage

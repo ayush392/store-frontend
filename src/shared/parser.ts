@@ -1,8 +1,15 @@
-import { Common } from '@store/schemas';
+import { z } from 'zod';
+import { ObjectIdSchema } from './schemas/common.schema';
 
 export const parseObjectId = (value: string): string => {
-  if (!Common.objectIdRegex.test(value)) {
-    throw new Error('Invalid ObjectId');
+  const result = z.safeParse(ObjectIdSchema, value);
+
+  if (!result.success) {
+    const message = result.error.issues
+      .map((issue) => issue.message)
+      .join(', ');
+    throw new Error(message);
   }
-  return value;
+
+  return result.data;
 };

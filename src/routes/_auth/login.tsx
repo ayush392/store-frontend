@@ -1,4 +1,3 @@
-import { Auth } from '@store/schemas';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -7,6 +6,8 @@ import { TextInput } from '../../components/form/TextInput';
 import { PageLayout } from '../../components/Layout';
 import { fetcher } from '../../lib/fetcher';
 import { notifyError } from '../../lib/toast';
+import type { LoginUser } from '../../shared/schemas/auth.schema';
+import { LoginUserSchema } from '../../shared/schemas/auth.schema';
 
 export const Route = createFileRoute('/_auth/login')({
   component: LoginPage
@@ -16,7 +17,7 @@ function LoginPage() {
   const navigate = useNavigate();
 
   const { mutate, isPending, error } = useMutation({
-    mutationFn: async (formData: Auth.LoginUser) =>
+    mutationFn: async (formData: LoginUser) =>
       fetcher<{ name: string; role: string; token: string }>(
         '/auth/login',
         'POST',
@@ -40,8 +41,8 @@ function LoginPage() {
       mutate(value);
     },
     validators: {
-      onSubmit: Auth.LoginUserSchema,
-      onBlur: Auth.LoginUserSchema
+      onSubmit: LoginUserSchema,
+      onBlur: LoginUserSchema
     }
   });
 

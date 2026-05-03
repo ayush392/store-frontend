@@ -1,9 +1,9 @@
-import type { ObjectId } from '@store/schemas';
 import { useQuery } from '@tanstack/react-query';
 import { fetcher } from '../../lib/fetcher';
 import type { Account } from '../../shared/types';
 import { PageLayout } from '../Layout';
 import { TransactionForm } from '../TransactionForm';
+import type { ObjectId } from '../../shared/schemas/common.schema';
 
 type Props = {
   mode: 'create' | 'edit';

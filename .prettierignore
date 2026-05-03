@@ -1,0 +1,11 @@
+dist
+node_modules
+coverage
+.env*
+.DS_Store
+.vscode
+
+# Ignore artifacts:
+build
+# Ignore all HTML files:
+**/*.html

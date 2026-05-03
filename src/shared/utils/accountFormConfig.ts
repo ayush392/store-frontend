@@ -1,4 +1,8 @@
-import { Form, Staff, type AccountType } from '@store/schemas';
+import {
+  CreateAccountSchema,
+  type AccountType
+} from '../schemas/account.schema';
+import { CreateStaffSchema, SalaryTypeEnum } from '../schemas/staff.schema';
 
 export const getAccountFormConfig = (accountType: AccountType) => {
   const defaultData = {
@@ -9,7 +13,7 @@ export const getAccountFormConfig = (accountType: AccountType) => {
     notes: ''
   };
   const employment = {
-    salaryType: Staff.SalaryTypeEnum.options[0] || 'MONTHLY',
+    salaryType: SalaryTypeEnum.options[0] || 'MONTHLY',
     joinDate: new Date().toLocaleDateString('en-CA'),
     salary: 0
   };
@@ -20,12 +24,12 @@ export const getAccountFormConfig = (accountType: AccountType) => {
         ...defaultData,
         employment: { ...employment }
       },
-      schema: Form.CreateStaffSchema
+      schema: CreateStaffSchema
     };
   }
 
   return {
     defaultValues: { ...defaultData, accountType },
-    schema: Form.CreateAccountSchema
+    schema: CreateAccountSchema
   };
 };

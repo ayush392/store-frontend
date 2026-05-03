@@ -1,4 +1,4 @@
-import type { TransactionType } from '@store/schemas';
+import type { TransactionType } from './schemas/transaction.schema';
 
 export const formatEnum = (value: string) => {
   if (!value) return '';

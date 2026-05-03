@@ -1,4 +1,3 @@
-import { Form, Transaction } from '@store/schemas';
 import { useForm, useStore } from '@tanstack/react-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetcher } from '../lib/fetcher';
@@ -8,6 +7,8 @@ import { NumberInput } from './form/NumberInput';
 import { SelectInput } from './form/SelectInput';
 import { TextArea } from './form/TextArea';
 import { TransactionMessage } from './TransactionMessage';
+import type { CreateTransaction } from '../shared/schemas/transaction.schema';
+import { CreateTransactionSchema, TransactionTypeEnum } from '../shared/schemas/transaction.schema';
 
 type Props = {
   name: string;
@@ -18,7 +19,7 @@ export const TransactionForm = ({ name, accountId }: Props) => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (formData: Form.CreateTransaction) =>
+    mutationFn: async (formData: CreateTransaction) =>
       fetcher(`/transaction`, 'POST', { ...formData, accountId }),
     onSuccess: () => {
       notifySuccess('Transaction created for ' + name);
@@ -33,7 +34,7 @@ export const TransactionForm = ({ name, accountId }: Props) => {
 
   const form = useForm({
     defaultValues: {
-      transactionType: Transaction.TransactionTypeEnum.options[0]!,
+      transactionType: TransactionTypeEnum.options[0]!,
       amount: 0,
       date: new Date().toLocaleDateString('en-CA'),
       note: ''
@@ -43,8 +44,8 @@ export const TransactionForm = ({ name, accountId }: Props) => {
       formApi.reset();
     },
     validators: {
-      onSubmit: Form.CreateTransactionSchema,
-      onBlur: Form.CreateTransactionSchema
+      onSubmit: CreateTransactionSchema,
+      onBlur: CreateTransactionSchema
     }
   });
 
@@ -67,7 +68,7 @@ export const TransactionForm = ({ name, accountId }: Props) => {
             <SelectInput
               label="Type"
               field={field}
-              options={Transaction.TransactionTypeEnum.options}
+              options={TransactionTypeEnum.options}
             />
           )}
         </Field>

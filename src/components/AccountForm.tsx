@@ -1,4 +1,3 @@
-import { type AccountType } from '@store/schemas';
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetcher } from '../lib/fetcher';
@@ -10,6 +9,7 @@ import { NumberInput } from './form/NumberInput';
 import { SelectInput } from './form/SelectInput';
 import { TextArea } from './form/TextArea';
 import { TextInput } from './form/TextInput';
+import type { AccountType } from '../shared/schemas/account.schema';
 
 type Props = {
   accountType: AccountType;

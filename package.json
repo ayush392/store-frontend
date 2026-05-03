@@ -12,14 +12,14 @@
     "start": "vite preview --host"
   },
   "dependencies": {
-    "@store/schemas": "workspace:*",
     "@tanstack/react-form": "^1.28.5",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-router": "^1.166.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",
-    "react-icons": "^5.6.0"
+    "react-icons": "^5.6.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

@@ -1,4 +1,3 @@
-import type { AttendanceType } from '@store/schemas';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
@@ -6,6 +5,7 @@ import { fetcher } from '../lib/fetcher';
 import { notifyError, notifySuccess } from '../lib/toast';
 import { BottomSheet } from './BottomSheet';
 import { UpdateAttendance } from './UpdateAttendance';
+import type { AttendanceType } from '../shared/schemas/staff.schema';
 
 type Attendance = {
   accountId: string;

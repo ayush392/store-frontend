@@ -1,5 +1,5 @@
-import type { TransactionType } from '@store/schemas';
 import { formatAmount } from '../shared/format';
+import type { TransactionType } from '../shared/schemas/transaction.schema';
 
 type Props = {
   amount: number;

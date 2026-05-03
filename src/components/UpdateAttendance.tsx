@@ -1,7 +1,7 @@
-import type { AttendanceType } from '@store/schemas';
 import { useState, type JSX } from 'react';
 import { FiCheckCircle, FiClock, FiXCircle } from 'react-icons/fi';
 import { formatDate } from '../shared/format';
+import type { AttendanceType } from '../shared/schemas/staff.schema';
 
 const statusColors: Record<
   AttendanceType,

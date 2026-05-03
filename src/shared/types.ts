@@ -1,11 +1,8 @@
-import type {
-  AccountType,
-  AttendanceType,
-  ObjectId,
-  SalaryType,
-  TransactionType
-} from '@store/schemas';
 import type { AnyFieldApi } from '@tanstack/react-form';
+import type { AccountType } from './schemas/account.schema';
+import type { AttendanceType, SalaryType } from './schemas/staff.schema';
+import type { TransactionType } from './schemas/transaction.schema';
+import type { ObjectId } from './schemas/common.schema';
 
 export interface FormInputProps {
   label: string;
@@ -42,6 +39,7 @@ export type RecentTrans = {
   date: string; // ISO date
   account: Account;
 };
+
 type Point = {
   date: string;
   credit: number;
