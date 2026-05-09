@@ -5,7 +5,10 @@ import { ProfileCard } from '../../../components/ProfileCard';
 import { SectionHeader } from '../../../components/SectionHeader';
 import { TransactionList } from '../../../components/TransactionList';
 import { fetcher } from '../../../lib/fetcher';
-import type { UserDetails } from '../../../shared/types';
+import type { Transactions, UserDetails } from '../../../shared/types';
+import { ListSkeleton } from '../../../components/placeholders/ListSkeleton';
+import { ProfileCardSkeleton } from '../../../components/placeholders/ProfileSkeleton';
+import { SkeletonWrapper } from '../../../components/placeholders/SkeletonWrapper';
 
 export const Route = createFileRoute('/customers/$customerId/')({
   component: CustomerDetailsPage
@@ -20,10 +23,6 @@ function CustomerDetailsPage() {
     queryFn: () => fetcher<UserDetails>(`/account/${customerId}/`)
   });
 
-  if (isLoading) {
-    return <PageLayout title={title}>Loading...</PageLayout>;
-  }
-
   if (error) {
     return (
       <PageLayout title={title}>
@@ -32,20 +31,28 @@ function CustomerDetailsPage() {
     );
   }
 
-  if (!data) {
-    return (
-      <PageLayout title={title}>
-        <div>Customer not found</div>
-      </PageLayout>
-    );
-  }
-
   return (
     <PageLayout title={title}>
-      <ProfileCard profile={data.profile} employment={data.employment} />
+      <SkeletonWrapper<UserDetails>
+        isLoading={isLoading}
+        skeleton={<ProfileCardSkeleton />}
+        data={data}
+      >
+        {data && (
+          <ProfileCard profile={data.profile} employment={data.employment} />
+        )}
+      </SkeletonWrapper>
+
       <div className="bg-white rounded-lg shadow-sm">
         <SectionHeader title="Transactions" filterOptions={['all']} />
-        <TransactionList transactions={data.transactions} />
+        <SkeletonWrapper<Transactions[]>
+          isLoading={isLoading}
+          skeleton={<ListSkeleton />}
+          data={data?.transactions}
+          message="No transactions found"
+        >
+          {data && <TransactionList transactions={data.transactions} />}
+        </SkeletonWrapper>
       </div>
     </PageLayout>
   );

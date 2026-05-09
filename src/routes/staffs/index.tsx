@@ -6,7 +6,12 @@ import { fetcher } from '../../lib/fetcher';
 import { notifyError, notifySuccess } from '../../lib/toast';
 import { formatAmount, formatEnum } from '../../shared/format';
 import type { Staff } from '../../shared/types';
-import type { AttendanceType, BulkAttendance } from '../../shared/schemas/staff.schema';
+import type {
+  AttendanceType,
+  BulkAttendance
+} from '../../shared/schemas/staff.schema';
+import { ListSkeleton } from '../../components/placeholders/ListSkeleton';
+import { SkeletonWrapper } from '../../components/placeholders/SkeletonWrapper';
 
 export const Route = createFileRoute('/staffs/')({
   component: StaffsPage
@@ -80,13 +85,11 @@ function StaffsPage() {
     if (staffData && staffData.length > 0) mutate(staffData);
   };
 
-  if (isLoading) return <div>Loading</div>;
   if (error) {
     console.log(setSelectedStaffs); //Remove it;
     console.log(error);
     return <div>{error.message}</div>;
   }
-  if (!data) return <div>No staff found!</div>;
 
   return (
     <div className="">
@@ -134,92 +137,101 @@ function StaffsPage() {
               onClick={() => handleSelectStaff('all')}
               className="text-sm text-blue-600 font-medium"
             >
-              {selectedStaffs.size === data.length
+              {selectedStaffs.size === data?.length
                 ? 'Deselect All'
                 : 'Select All'}
             </button>
           </div>
         </div>
 
-        <div className="divide-y divide-gray-200">
-          {data.map((staff) => {
-            const isSelected = selectedStaffs.has(staff.employmentId);
+        <SkeletonWrapper<Staff[]>
+          isLoading={isLoading}
+          skeleton={<ListSkeleton showButton={true} />}
+          data={data}
+          message="No staff found"
+        >
+          <div className="divide-y divide-gray-200">
+            {data?.map((staff) => {
+              const isSelected = selectedStaffs.has(staff.employmentId);
 
-            return (
-              <div
-                key={staff.employmentId}
-                className={`p-4 border-b border-gray-100 last:border-b-0 ${
-                  isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                } transition-colors`}
-              >
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => handleSelectStaff('', staff.employmentId)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
+              return (
+                <div
+                  key={staff.employmentId}
+                  className={`p-4 border-b border-gray-100 last:border-b-0 ${
+                    isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                  } transition-colors`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleSelectStaff('', staff.employmentId)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
 
-                  <div className="flex-1">
-                    {/* Staff Card Content */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3 flex-1">
-                        <Link
-                          to="/staffs/$staffId"
-                          params={{ staffId: staff.account._id }}
-                          className="flex-1"
-                        >
-                          <div className="font-semibold text-gray-800 text-left hover:text-blue-600 transition-colors ">
-                            {staff.account.name}
-                          </div>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                                staff.status
-                              )}`}
-                            >
-                              {formatEnum(staff.status) || 'None'}
-                            </span>
-                            <span className="text-xs font-semibold text-gray-500">
-                              {staff.salaryType === 'DAILY'
-                                ? `${formatAmount(staff.salary)}/day`
-                                : 'Monthly'}
-                            </span>
-                          </div>
-                        </Link>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <div className="text-right">
-                          <div className="text-xs text-gray-500 mb-1">Due</div>
-                          <div
-                            className={`font-bold text-sm ${
-                              staff.account.currentOutstanding > 0
-                                ? 'text-red-600'
-                                : 'text-gray-400'
-                            }`}
+                    <div className="flex-1">
+                      {/* Staff Card Content */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <Link
+                            to="/staffs/$staffId"
+                            params={{ staffId: staff.account._id }}
+                            className="flex-1"
                           >
-                            {formatAmount(staff.account.currentOutstanding)}
-                          </div>
+                            <div className="font-semibold text-gray-800 text-left hover:text-blue-600 transition-colors ">
+                              {staff.account.name}
+                            </div>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                                  staff.status
+                                )}`}
+                              >
+                                {formatEnum(staff.status) || 'None'}
+                              </span>
+                              <span className="text-xs font-semibold text-gray-500">
+                                {staff.salaryType === 'DAILY'
+                                  ? `${formatAmount(staff.salary)}/day`
+                                  : 'Monthly'}
+                              </span>
+                            </div>
+                          </Link>
                         </div>
 
-                        {/* Pay Button */}
-                        <Link
-                          to="/staffs/$staffId/transactions/new"
-                          params={{ staffId: staff.account._id }}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm flex items-center space-x-1"
-                        >
-                          <FiDollarSign size={14} />
-                          <span>Pay</span>
-                        </Link>
+                        <div className="flex items-center space-x-3">
+                          <div className="text-right">
+                            <div className="text-xs text-gray-500 mb-1">
+                              Due
+                            </div>
+                            <div
+                              className={`font-bold text-sm ${
+                                staff.account.currentOutstanding > 0
+                                  ? 'text-red-600'
+                                  : 'text-gray-400'
+                              }`}
+                            >
+                              {formatAmount(staff.account.currentOutstanding)}
+                            </div>
+                          </div>
+
+                          {/* Pay Button */}
+                          <Link
+                            to="/staffs/$staffId/transactions/new"
+                            params={{ staffId: staff.account._id }}
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm flex items-center space-x-1"
+                          >
+                            <FiDollarSign size={14} />
+                            <span>Pay</span>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </SkeletonWrapper>
       </div>
     </div>
   );

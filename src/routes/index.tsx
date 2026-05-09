@@ -11,6 +11,8 @@ import {
 } from '../shared/format';
 import { CustomerIcon, StaffIcon, StoreIcon } from '../shared/icons';
 import type { RecentTrans } from '../shared/types';
+import { ListSkeleton } from '../components/placeholders/ListSkeleton';
+import { SkeletonWrapper } from '../components/placeholders/SkeletonWrapper';
 
 export const Route = createFileRoute('/')({
   component: HomePage
@@ -36,7 +38,6 @@ function HomePage() {
     return `/${type}/${_id}`;
   };
 
-  if (isLoading) return <div>Loading</div>;
   if (error) {
     console.log(error);
     return <div>{error.message}</div>;
@@ -65,9 +66,14 @@ function HomePage() {
           filterOptions={['all', 'staff', 'customer', 'store']}
         />
 
-        <div className="divide-y divide-gray-200">
-          {data &&
-            data.map((transaction, index) => (
+        <SkeletonWrapper<RecentTrans[]>
+          isLoading={isLoading}
+          skeleton={<ListSkeleton />}
+          data={data}
+          message="No Recent Transactions"
+        >
+          <div className="divide-y divide-gray-200">
+            {data?.map((transaction, index) => (
               <div
                 key={index}
                 className="p-4 flex items-center justify-between active:bg-gray-50 transition"
@@ -107,7 +113,8 @@ function HomePage() {
                 </div>
               </div>
             ))}
-        </div>
+          </div>
+        </SkeletonWrapper>
       </div>
     </div>
   );
