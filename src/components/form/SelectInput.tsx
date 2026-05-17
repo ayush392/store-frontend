@@ -32,9 +32,7 @@ export const SelectInput = ({
           onChange={(e) => field.handleChange(e.target.value)}
           onBlur={field.handleBlur}
           disabled={disabled}
-          className={`appearance-none pr-8 w-full border px-3 py-2 rounded-lg text-sm ${
-            disabled ? 'bg-gray-100' : 'border-gray-300'
-          } ${resolvedError ? 'border-red-500' : ''}`}
+          className={`appearance-none pr-8 w-full border px-3 py-2 rounded-lg text-sm border-gray-300 ${disabled && 'bg-gray-200'} ${resolvedError && 'border-red-500'}`}
         >
           {includeEmptyOption ? (
             <option value="">{emptyOptionLabel}</option>

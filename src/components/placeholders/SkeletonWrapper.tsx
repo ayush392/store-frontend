@@ -17,7 +17,7 @@ export const SkeletonWrapper = <T extends object>({
 }: Props<T>) => {
   if (isLoading) return skeleton;
 
-  console.log({ skeletonData: data });
+  // console.log({ skeletonData: data });
 
   const isEmpty =
     data == null ||
