@@ -90,7 +90,12 @@ function StaffDetailsPage() {
               data={data?.transactions}
               message="No transactions found"
             >
-              {data && <TransactionList transactions={data.transactions} />}
+              {data && (
+                <TransactionList
+                  transactions={data.transactions}
+                  type="staffs"
+                />
+              )}
             </SkeletonWrapper>
           </div>
         )}

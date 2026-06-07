@@ -34,9 +34,7 @@ export const TextArea = ({
           disabled ? 'bg-gray-100' : 'border-gray-300'
         } ${resolvedError ? 'border-red-500' : ''}`}
       />
-      {resolvedError && (
-        <p className="text-red-500 text-xs mt-1">{resolvedError}</p>
-      )}
+      {resolvedError && <p className="text-red-500 text-xs">{resolvedError}</p>}
     </div>
   );
 };

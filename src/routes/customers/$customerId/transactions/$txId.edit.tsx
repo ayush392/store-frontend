@@ -15,6 +15,8 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { customerId } = Route.useParams();
-  return <TransactionPage mode="edit" accountId={customerId} />;
+  const { customerId, txId } = Route.useParams();
+  return (
+    <TransactionPage mode="edit" accountId={customerId} transactionId={txId} />
+  );
 }

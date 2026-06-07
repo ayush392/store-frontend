@@ -7,22 +7,36 @@ import { NumberInput } from './form/NumberInput';
 import { SelectInput } from './form/SelectInput';
 import { TextArea } from './form/TextArea';
 import { TransactionMessage } from './TransactionMessage';
-import type { CreateTransaction } from '../shared/schemas/transaction.schema';
-import { CreateTransactionSchema, TransactionTypeEnum } from '../shared/schemas/transaction.schema';
+import {
+  type CreateTransaction,
+  type UpdateTransaction,
+  CreateTransactionSchema,
+  TransactionTypeEnum
+} from '../shared/schemas/transaction.schema';
+import type { Transactions } from '../shared/types';
+import z from 'zod';
 
 type Props = {
   name: string;
   accountId: string;
+  transaction?: Transactions;
 };
 
-export const TransactionForm = ({ name, accountId }: Props) => {
+export const TransactionForm = ({ name, accountId, transaction }: Props) => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (formData: CreateTransaction) =>
-      fetcher(`/transaction`, 'POST', { ...formData, accountId }),
+    mutationFn: async (formData: CreateTransaction | UpdateTransaction) => {
+      if (transaction) {
+        return fetcher(`/transaction/${transaction._id}`, 'PATCH', formData);
+      }
+      return fetcher(`/transaction`, 'POST', { ...formData, accountId });
+    },
     onSuccess: () => {
-      notifySuccess('Transaction created for ' + name);
+      const message = transaction
+        ? 'Transaction updated successfully'
+        : 'Transaction created for ' + name;
+      notifySuccess(message);
       queryClient.invalidateQueries({ queryKey: ['staff', accountId] });
       queryClient.invalidateQueries({ queryKey: ['customer', accountId] });
       queryClient.invalidateQueries({ queryKey: ['store', accountId] });
@@ -34,24 +48,56 @@ export const TransactionForm = ({ name, accountId }: Props) => {
 
   const form = useForm({
     defaultValues: {
-      transactionType: TransactionTypeEnum.options[0]!,
-      amount: 0,
-      date: new Date().toLocaleDateString('en-CA'),
-      note: ''
+      transactionType:
+        transaction?.transactionType || TransactionTypeEnum.options[0],
+      amount: transaction?.amount || 0,
+      date: new Date(transaction?.date || new Date()).toLocaleDateString(
+        'en-CA'
+      ),
+      note: transaction?.note || '',
+      ...(transaction ? { reason: '' } : {})
     },
     onSubmit: ({ value, formApi }) => {
+      const defaultValues = formApi.options.defaultValues || {};
+      if (transaction) {
+        const changedValues: UpdateTransaction = { reason: '' };
+
+        const keys = Object.keys(defaultValues) as Array<
+          keyof typeof defaultValues
+        >;
+
+        for (const key of keys) {
+          if (value[key] !== defaultValues[key]) {
+            changedValues[key as keyof UpdateTransaction] = value[key];
+          }
+        }
+
+        if (Object.keys(changedValues).length === 0) {
+          notifyError('Nothing to update');
+          return;
+        }
+
+        mutate(changedValues);
+        return;
+      }
+
       mutate(value);
-      formApi.reset();
+      form.reset();
     },
     validators: {
-      onSubmit: CreateTransactionSchema,
-      onBlur: CreateTransactionSchema
+      onSubmit: transaction
+        ? CreateTransactionSchema.extend({
+            reason: z.string().trim().min(1, 'Reason is required')
+          })
+        : CreateTransactionSchema
     }
   });
 
   const { Field } = form;
   const amount = useStore(form.store, (state) => state.values.amount);
   const type = useStore(form.store, (state) => state.values.transactionType);
+  const isValid = useStore(form.store, (state) => state.isValid);
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
 
   return (
     <form
@@ -69,6 +115,7 @@ export const TransactionForm = ({ name, accountId }: Props) => {
               label="Type"
               field={field}
               options={TransactionTypeEnum.options}
+              disabled={!!transaction}
             />
           )}
         </Field>
@@ -88,12 +135,31 @@ export const TransactionForm = ({ name, accountId }: Props) => {
         )}
       </Field>
 
+      {transaction && (
+        <Field name="reason">
+          {(field) => (
+            <TextArea
+              label="Reason for update"
+              field={field}
+              rows={2}
+              placeholder="Why are you updating this?"
+            />
+          )}
+        </Field>
+      )}
+
       <button
-        disabled={isPending}
+        disabled={isPending || isSubmitting || !isValid}
         type="submit"
-        className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60"
+        className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60 active:bg-green-700"
       >
-        Save
+        {transaction
+          ? isPending || isSubmitting
+            ? 'Updating...'
+            : 'Update'
+          : isPending || isSubmitting
+            ? 'Saving...'
+            : 'Save'}
       </button>
     </form>
   );

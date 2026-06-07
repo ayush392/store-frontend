@@ -8,16 +8,38 @@ import {
   getAmountSymbol
 } from '../shared/format';
 import type { Transactions } from '../shared/types';
+import { Link } from '@tanstack/react-router';
 
 type Props = {
   transactions: Transactions[];
+  type: 'customers' | 'stores' | 'staffs';
 };
 
-export const TransactionList = ({ transactions }: Props) => {
+export const TransactionList = ({ transactions, type }: Props) => {
   const [expandedId, setExpandedId] = useState<string>('');
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev: string) => (prev === id ? '' : id));
+  };
+
+  const getEditTransactionPageLink = (transaction: Transactions) => {
+    switch (type) {
+      case 'staffs':
+        return {
+          to: '/staffs/$staffId/transactions/$txId/edit',
+          params: { staffId: transaction.accountId, txId: transaction._id }
+        };
+      case 'customers':
+        return {
+          to: '/customers/$customerId/transactions/$txId/edit',
+          params: { customerId: transaction.accountId, txId: transaction._id }
+        };
+      case 'stores':
+        return {
+          to: '/stores/$storeId/transactions/$txId/edit',
+          params: { storeId: transaction.accountId, txId: transaction._id }
+        };
+    }
   };
 
   return (
@@ -76,16 +98,13 @@ export const TransactionList = ({ transactions }: Props) => {
             >
               {isExpanded && (
                 <div className="mt-3 pt-3 border-t border-gray-200 flex justify-end gap-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Edit', transaction);
-                    }}
+                  <Link
+                    {...getEditTransactionPageLink(transaction)}
                     className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-blue-50 text-blue-600 active:bg-blue-100"
                   >
                     <FiEdit3 size={14} />
                     Edit
-                  </button>
+                  </Link>
 
                   <button
                     onClick={(e) => {
