@@ -12,6 +12,7 @@ import type {
 } from '../../shared/schemas/staff.schema';
 import { ListSkeleton } from '../../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../../components/placeholders/SkeletonWrapper';
+import { FloatingButton } from '../../components/FloatingButton';
 
 export const Route = createFileRoute('/staffs/')({
   component: StaffsPage
@@ -86,7 +87,6 @@ function StaffsPage() {
   };
 
   if (error) {
-    console.log(setSelectedStaffs); //Remove it;
     console.log(error);
     return <div>{error.message}</div>;
   }
@@ -233,6 +233,8 @@ function StaffsPage() {
           </div>
         </SkeletonWrapper>
       </div>
+
+      <FloatingButton link="/staffs/new" label="Staff" />
     </div>
   );
 }

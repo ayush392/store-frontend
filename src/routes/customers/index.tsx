@@ -4,10 +4,10 @@ import { FiDollarSign } from 'react-icons/fi';
 import { SectionHeader } from '../../components/SectionHeader';
 import { fetcher } from '../../lib/fetcher';
 import { formatAmount } from '../../shared/format';
-import { CustomerIcon } from '../../shared/icons';
 import type { Account } from '../../shared/types';
 import { ListSkeleton } from '../../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../../components/placeholders/SkeletonWrapper';
+import { FloatingButton } from '../../components/FloatingButton';
 
 export const Route = createFileRoute('/customers/')({
   component: CustomersPage
@@ -81,14 +81,7 @@ function CustomersPage() {
       </div>
 
       {/* Floating Add Button */}
-      <Link
-        to="/customers/new"
-        className="fixed right-5 bottom-24 z-50 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg px-4 py-3 flex items-center gap-2 border border-blue-500/40"
-        aria-label="Add Customer"
-      >
-        <CustomerIcon size={18} />
-        <span className="font-medium text-sm">Add Customer</span>
-      </Link>
+      <FloatingButton link="/customers/new" label="Customer" />
     </div>
   );
 }

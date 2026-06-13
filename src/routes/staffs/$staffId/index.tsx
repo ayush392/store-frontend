@@ -12,6 +12,7 @@ import type { Transactions, UserDetails } from '../../../shared/types';
 import { ListSkeleton } from '../../../components/placeholders/ListSkeleton';
 import { ProfileCardSkeleton } from '../../../components/placeholders/ProfileSkeleton';
 import { SkeletonWrapper } from '../../../components/placeholders/SkeletonWrapper';
+import { FloatingButton } from '../../../components/FloatingButton';
 
 export const Route = createFileRoute('/staffs/$staffId/')({
   component: StaffDetailsPage
@@ -107,6 +108,8 @@ function StaffDetailsPage() {
           />
         )}
       </div>
+
+      <FloatingButton link={`./transactions/new`} label="Pay" />
     </PageLayout>
   );
 }

@@ -7,6 +7,7 @@ import { formatAmount } from '../../shared/format';
 import type { Account } from '../../shared/types';
 import { ListSkeleton } from '../../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../../components/placeholders/SkeletonWrapper';
+import { FloatingButton } from '../../components/FloatingButton';
 
 export const Route = createFileRoute('/stores/')({
   component: StoresPage
@@ -73,6 +74,8 @@ function StoresPage() {
           </div>
         </SkeletonWrapper>
       </div>
+
+      <FloatingButton link="/stores/new" label="Store" />
     </div>
   );
 }
