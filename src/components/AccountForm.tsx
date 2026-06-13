@@ -1,4 +1,4 @@
-import { useForm } from '@tanstack/react-form';
+import { useForm, useStore } from '@tanstack/react-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetcher } from '../lib/fetcher';
 import { notifyError, notifySuccess } from '../lib/toast';
@@ -9,25 +9,40 @@ import { NumberInput } from './form/NumberInput';
 import { SelectInput } from './form/SelectInput';
 import { TextArea } from './form/TextArea';
 import { TextInput } from './form/TextInput';
-import type { AccountType } from '../shared/schemas/account.schema';
+import type {
+  AccountType,
+  CreateAccount
+} from '../shared/schemas/account.schema';
+import type { Account } from '../shared/types';
 
 type Props = {
+  mode: 'create' | 'edit';
   accountType: AccountType;
+  account?: Account;
 };
 
-export const AccountForm = ({ accountType }: Props) => {
+export const AccountForm = ({ mode, accountType, account }: Props) => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (formData: typeof config.defaultValues) =>
-      fetcher(
-        accountType === 'STAFF' ? '/staff' : '/account',
-        'POST',
-        formData
-      ),
+    mutationFn: async (formData: unknown) => {
+      if (mode === 'edit') {
+        return fetcher(`/account/${account?._id}`, 'PATCH', formData);
+      } else {
+        return fetcher(
+          accountType === 'STAFF' ? '/staff' : '/account',
+          'POST',
+          formData
+        );
+      }
+    },
     onSuccess: () => {
       const accType = formatEnum(accountType);
-      notifySuccess(`New ${accType} created`);
+      const message =
+        mode === 'edit'
+          ? 'Profile updated successfully'
+          : `New ${accType} created`;
+      notifySuccess(message);
       queryClient.invalidateQueries({ queryKey: [accType] });
     },
     onError: (error) => {
@@ -35,20 +50,43 @@ export const AccountForm = ({ accountType }: Props) => {
     }
   });
 
-  const config = getAccountFormConfig(accountType);
+  const config = getAccountFormConfig(accountType, mode, account);
   const form = useForm({
     defaultValues: config.defaultValues,
     validators: {
-      onSubmit: config.schema,
-      onBlur: config.schema
+      onSubmit: config.schema
     },
     onSubmit: ({ value, formApi }) => {
+      const defaultValues = formApi.options.defaultValues || {};
+
+      if (mode === 'edit') {
+        const changedValues: Partial<CreateAccount> = {};
+        const keys = Object.keys(defaultValues) as Array<
+          keyof typeof defaultValues
+        >;
+        for (const key of keys) {
+          if (value[key] !== defaultValues[key]) {
+            changedValues[key as keyof CreateAccount] = value[key];
+          }
+        }
+
+        if (Object.keys(changedValues).length === 0) {
+          notifyError('Nothing to update');
+          return;
+        }
+
+        mutate(changedValues);
+        return;
+      }
       mutate(value);
       formApi.reset();
     }
   });
 
   const { Field } = form;
+  const isValid = useStore(form.store, (state) => state.isValid);
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
+
   return (
     <form
       className="space-y-4"
@@ -83,8 +121,8 @@ export const AccountForm = ({ accountType }: Props) => {
         )}
       </Field>
 
-      {/* staff fields */}
-      {accountType === 'STAFF' && (
+      {/* staff fields in create mode only */}
+      {accountType === 'STAFF' && mode === 'create' && (
         <>
           <div className="grid grid-cols-2 gap-4">
             <Field name="employment.salaryType">
@@ -126,11 +164,17 @@ export const AccountForm = ({ accountType }: Props) => {
       </Field>
 
       <button
-        disabled={isPending}
+        disabled={isPending || isSubmitting || !isValid}
         type="submit"
         className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60"
       >
-        Save
+        {mode === 'edit'
+          ? isPending || isSubmitting
+            ? 'Updating...'
+            : 'Update'
+          : isPending || isSubmitting
+            ? 'Saving...'
+            : 'Save'}
       </button>
     </form>
   );

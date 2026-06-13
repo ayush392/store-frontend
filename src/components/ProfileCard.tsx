@@ -1,6 +1,7 @@
 import { FiEdit3, FiUser } from 'react-icons/fi';
 import { formatAmount, formatDate } from '../shared/format';
 import type { Account, Employment } from '../shared/types';
+import { Link } from '@tanstack/react-router';
 
 type Props = {
   profile: Account;
@@ -8,6 +9,26 @@ type Props = {
 };
 
 export const ProfileCard = ({ profile, employment }: Props) => {
+  const getEditAccountPageLink = () => {
+    switch (profile.accountType) {
+      case 'STAFF':
+        return {
+          to: '/staffs/$staffId/edit',
+          params: { staffId: profile._id }
+        };
+      case 'CUSTOMER':
+        return {
+          to: '/customers/$customerId/edit',
+          params: { customerId: profile._id }
+        };
+      case 'STORE':
+        return {
+          to: '/stores/$storeId/edit',
+          params: { storeId: profile._id }
+        };
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
       <div className="flex items-center justify-between">
@@ -25,9 +46,9 @@ export const ProfileCard = ({ profile, employment }: Props) => {
           </div>
         </div>
 
-        <button className="p-2 text-blue-600">
+        <Link className="p-2 text-blue-600" {...getEditAccountPageLink()}>
           <FiEdit3 size={18} />
-        </button>
+        </Link>
       </div>
 
       <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-gray-700">

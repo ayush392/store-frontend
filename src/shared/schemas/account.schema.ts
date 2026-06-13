@@ -8,14 +8,14 @@ export const BaseAccountSchema = z.object({
   displayName: z.string().trim(),
   phone: PhoneSchema,
   address: z.string().trim().min(5, 'Address is too short'),
-  notes: z.string().trim()
+  notes: z.string().trim().min(1, 'Notes is required')
 });
 
 export const CreateAccountSchema = BaseAccountSchema.extend({
-  accountType: AccountTypeEnum.exclude(['STAFF'])
+  accountType: AccountTypeEnum
 });
 
-export const UpdateAccountSchema = BaseAccountSchema.partial();
+export const UpdateAccountSchema = BaseAccountSchema;
 
 export type AccountType = z.infer<typeof AccountTypeEnum>;
 export type CreateAccount = z.infer<typeof CreateAccountSchema>;

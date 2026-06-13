@@ -30,7 +30,7 @@ export const TextArea = ({
         rows={rows}
         disabled={disabled}
         placeholder={placeholder}
-        className={`w-full border px-3 py-2 rounded-lg text-sm ${
+        className={`block w-full border px-3 py-2 rounded-lg text-sm ${
           disabled ? 'bg-gray-100' : 'border-gray-300'
         } ${resolvedError ? 'border-red-500' : ''}`}
       />
