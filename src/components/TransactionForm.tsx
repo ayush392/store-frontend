@@ -15,7 +15,7 @@ import {
 } from '../shared/schemas/transaction.schema';
 import type { Transactions } from '../shared/types';
 import z from 'zod';
-import { BillImages, type BillFile } from './BillImages';
+import { UploadBills, type BillFile } from './UploadBills';
 import { useState } from 'react';
 import { cloudinarySignedUpload } from '../shared/utils/cloudinary';
 
@@ -146,7 +146,7 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
         )}
       </Field>
 
-      <BillImages bills={bills} setBills={setBills} />
+      <UploadBills bills={bills} setBills={setBills} />
 
       {transaction && (
         <Field name="reason">

@@ -12,7 +12,7 @@ type Props = {
   setBills: React.Dispatch<React.SetStateAction<BillFile[]>>;
 };
 
-export const BillImages = ({ bills, setBills }: Props) => {
+export const UploadBills = ({ bills, setBills }: Props) => {
   const addBills = async (files: FileList) => {
     const allowedFiles = Array.from(files);
     const compressedBills = await Promise.all(
