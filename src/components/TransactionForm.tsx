@@ -15,6 +15,9 @@ import {
 } from '../shared/schemas/transaction.schema';
 import type { Transactions } from '../shared/types';
 import z from 'zod';
+import { BillImages, type BillFile } from './BillImages';
+import { useState } from 'react';
+import { cloudinarySignedUpload } from '../shared/utils/cloudinary';
 
 type Props = {
   name: string;
@@ -23,6 +26,7 @@ type Props = {
 };
 
 export const TransactionForm = ({ name, accountId, transaction }: Props) => {
+  const [bills, setBills] = useState<BillFile[]>([]);
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
@@ -57,7 +61,7 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
       note: transaction?.note || '',
       ...(transaction ? { reason: '' } : {})
     },
-    onSubmit: ({ value, formApi }) => {
+    onSubmit: async ({ value, formApi }) => {
       const defaultValues = formApi.options.defaultValues || {};
       if (transaction) {
         const changedValues: UpdateTransaction = { reason: '' };
@@ -81,7 +85,14 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
         return;
       }
 
-      mutate(value);
+      const uploadImages = await Promise.all(
+        bills.map((bill) => cloudinarySignedUpload(bill.file, accountId))
+      );
+
+      console.log({ uploadImages });
+
+      setBills([]);
+      mutate({ ...value, images: uploadImages });
       form.reset();
     },
     validators: {
@@ -134,6 +145,8 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
           <TextArea label="Notes" field={field} rows={3} placeholder="Notes" />
         )}
       </Field>
+
+      <BillImages bills={bills} setBills={setBills} />
 
       {transaction && (
         <Field name="reason">

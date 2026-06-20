@@ -14,7 +14,15 @@ export const CreateTransactionSchema = z.object({
     .int('Amount should be integer')
     .positive('Amount must be greater than 0'),
   date: DateOnlySchema,
-  note: z.string().trim().min(1, 'Notes is required')
+  note: z.string().trim().min(1, 'Notes is required'),
+  images: z
+    .array(
+      z.object({
+        publicId: z.string(),
+        url: z.string()
+      })
+    )
+    .optional()
 });
 
 export const UpdateTransactionSchema = CreateTransactionSchema.omit({
