@@ -13,6 +13,7 @@ import { CustomerIcon, StaffIcon, StoreIcon } from '../shared/icons';
 import type { RecentTrans } from '../shared/types';
 import { ListSkeleton } from '../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../components/placeholders/SkeletonWrapper';
+import { TransactionImageViewer } from '../components/TransactionImageViewer';
 
 export const Route = createFileRoute('/')({
   component: HomePage
@@ -74,43 +75,43 @@ function HomePage() {
         >
           <div className="divide-y divide-gray-200">
             {data?.map((transaction, index) => (
-              <div
-                key={index}
-                className="p-4 flex items-center justify-between active:bg-gray-50 transition"
-              >
-                <Link
-                  className="flex items-center gap-3 flex-1"
-                  to={getNavigationLink(transaction)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-800 truncate">
-                      {transaction.account.name}
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span className="capitalize">
-                        {formatEnum(transaction.account.accountType)}
-                      </span>
-                      <span className="text-gray-300">•</span>
-                      <span className="truncate">
-                        {transaction.account.phone}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-                <div className="text-right ml-2">
-                  <div
-                    className={`font-semibold ${getAmountColor(
-                      transaction.transactionType
-                    )}`}
+              <div key={index} className="p-4 active:bg-gray-50 transition">
+                <div className="flex items-center justify-between ">
+                  <Link
+                    className="flex items-center gap-3 flex-1"
+                    to={getNavigationLink(transaction)}
                   >
-                    {getAmountSymbol(transaction.amountChange)}
-                    {formatAmount(transaction.amount)}
-                  </div>
-                  <div className="text-sm text-gray-500 capitalize">
-                    {formatEnum(transaction.transactionType)}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-800 truncate">
+                        {transaction.account.name}
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <span className="capitalize">
+                          {formatEnum(transaction.account.accountType)}
+                        </span>
+                        <span className="text-gray-300">•</span>
+                        <span className="truncate">
+                          {transaction.account.phone}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                  <div className="text-right ml-2">
+                    <div
+                      className={`font-semibold ${getAmountColor(
+                        transaction.transactionType
+                      )}`}
+                    >
+                      {getAmountSymbol(transaction.amountChange)}
+                      {formatAmount(transaction.amount)}
+                    </div>
+                    <div className="text-sm text-gray-500 capitalize">
+                      {formatEnum(transaction.transactionType)}
+                    </div>
                   </div>
                 </div>
+                <TransactionImageViewer transaction={transaction} />
               </div>
             ))}
           </div>

@@ -38,6 +38,7 @@ export type RecentTrans = {
   amountChange: number;
   date: string; // ISO date
   account: Account;
+  images?: [{ url: string; publicId: string }];
 };
 
 type Point = {
@@ -72,6 +73,7 @@ export type Transactions = {
   amountChange: number;
   date: string;
   note: string;
+  images?: [{ url: string; publicId: string }];
 };
 
 export type UserDetails = {

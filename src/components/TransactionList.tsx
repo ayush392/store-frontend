@@ -9,6 +9,7 @@ import {
 } from '../shared/format';
 import type { Transactions } from '../shared/types';
 import { Link } from '@tanstack/react-router';
+import { TransactionImageViewer } from './TransactionImageViewer';
 
 type Props = {
   transactions: Transactions[];
@@ -87,6 +88,8 @@ export const TransactionList = ({ transactions, type }: Props) => {
                 </div>
               </div>
             </div>
+
+            <TransactionImageViewer transaction={transaction} />
 
             {/* Actions */}
             <div
