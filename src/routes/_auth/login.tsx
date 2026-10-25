@@ -41,8 +41,7 @@ function LoginPage() {
       mutate(value);
     },
     validators: {
-      onSubmit: LoginUserSchema,
-      onBlur: LoginUserSchema
+      onSubmit: LoginUserSchema
     }
   });
 
