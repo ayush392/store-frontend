@@ -1,101 +1,97 @@
-import { FiEdit3, FiUser } from 'react-icons/fi';
+import { Link } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
+import { FiEdit3, FiPhone } from 'react-icons/fi';
 import { formatAmount, formatDate } from '../shared/format';
 import type { Account, Employment } from '../shared/types';
-import { Link } from '@tanstack/react-router';
+import { haptics } from '../shared/utils/haptics';
+import { Avatar } from './ui/Avatar';
 
 type Props = {
   profile: Account;
   employment?: Employment[] | undefined;
 };
 
+const getEditLink = (profile: Account) => {
+  switch (profile.accountType) {
+    case 'STAFF':
+      return { to: '/staffs/$staffId/edit', params: { staffId: profile._id } } as const;
+    case 'CUSTOMER':
+      return { to: '/customers/$customerId/edit', params: { customerId: profile._id } } as const;
+    case 'STORE':
+      return { to: '/stores/$storeId/edit', params: { storeId: profile._id } } as const;
+  }
+};
+
+const DetailRow = ({ label, children }: { label: string; children: ReactNode }) => (
+  <div className="flex items-start justify-between gap-4 py-2.5">
+    <span className="shrink-0 text-[13px] font-medium text-slate-500">{label}</span>
+    <span className="selectable-text min-w-0 text-right text-sm font-semibold break-words text-slate-800">
+      {children}
+    </span>
+  </div>
+);
+
 export const ProfileCard = ({ profile, employment }: Props) => {
-  const getEditAccountPageLink = () => {
-    switch (profile.accountType) {
-      case 'STAFF':
-        return {
-          to: '/staffs/$staffId/edit',
-          params: { staffId: profile._id }
-        };
-      case 'CUSTOMER':
-        return {
-          to: '/customers/$customerId/edit',
-          params: { customerId: profile._id }
-        };
-      case 'STORE':
-        return {
-          to: '/stores/$storeId/edit',
-          params: { storeId: profile._id }
-        };
-    }
-  };
+  const job = employment?.[0];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3 min-w-0">
-          <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-            <FiUser size={20} className="text-gray-600" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-lg font-semibold text-gray-800 truncate">
-              {profile.name}
-            </h3>
-            <p className="text-sm text-gray-500 truncate">
-              {profile.displayName}
-            </p>
-          </div>
+    <div className="card p-4">
+      <div className="flex items-center gap-3.5">
+        <Avatar name={profile.name} accountType={profile.accountType} size="lg" />
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-lg font-bold tracking-tight text-slate-900">
+            {profile.name}
+          </h3>
+          {profile.displayName && (
+            <p className="truncate text-[13px] font-medium text-slate-500">{profile.displayName}</p>
+          )}
         </div>
+      </div>
 
-        <Link className="p-2 text-blue-600" {...getEditAccountPageLink()}>
-          <FiEdit3 size={18} />
+      {/* Quick actions */}
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <a
+          href={`tel:${profile.phone}`}
+          onClick={() => haptics.light()}
+          className="btn btn-md btn-tinted"
+        >
+          <FiPhone size={15} />
+          Call
+        </a>
+        <Link
+          {...getEditLink(profile)}
+          onClick={() => haptics.selection()}
+          className="btn btn-md btn-neutral"
+        >
+          <FiEdit3 size={15} />
+          Edit
         </Link>
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-gray-700">
-        <div className="flex justify-between">
-          <span className="text-gray-500">Phone</span>
-          <span className="font-medium text-gray-800">{profile.phone}</span>
-        </div>
+      {/* Balance */}
+      <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
+        <span className="text-[13px] font-semibold text-slate-500">Current due</span>
+        <span
+          className={`text-xl font-extrabold tracking-tight tabular-nums ${
+            profile.currentOutstanding > 0 ? 'text-rose-600' : 'text-slate-500'
+          }`}
+        >
+          {formatAmount(profile.currentOutstanding)}
+        </span>
+      </div>
 
-        <div className="flex justify-between">
-          <span className="text-gray-500">Address</span>
-          <span className="font-medium text-gray-800 text-right">
-            {profile.address}
-          </span>
-        </div>
-
-        {profile.notes && (
-          <div className="flex justify-between">
-            <span className="text-gray-500">Notes</span>
-            <span className="font-medium text-gray-800 text-right truncate">
-              {profile.notes}
-            </span>
-          </div>
-        )}
-
-        <div className="flex justify-between text-red-600 ">
-          <span className="">Outstanding</span>
-          <span className="font-medium">
-            {formatAmount(profile.currentOutstanding)}
-          </span>
-        </div>
-
-        {employment && employment[0] && (
+      <div className="mt-1 divide-y divide-slate-100">
+        <DetailRow label="Phone">{profile.phone}</DetailRow>
+        {profile.address && <DetailRow label="Address">{profile.address}</DetailRow>}
+        {profile.notes && <DetailRow label="Notes">{profile.notes}</DetailRow>}
+        {job && (
           <>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Salary</span>
-              <span className="font-medium text-gray-800">
-                {formatAmount(employment[0].salary)}/
-                {employment[0].salaryType === 'DAILY' ? 'day' : 'month'}
+            <DetailRow label="Salary">
+              <span className="tabular-nums">
+                {formatAmount(job.salary)} / {job.salaryType === 'DAILY' ? 'day' : 'month'}
               </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-500">Joining Date</span>
-              <span className="font-medium text-gray-800">
-                {formatDate(employment[0].joinDate)}
-              </span>
-            </div>
+            </DetailRow>
+            <DetailRow label="Joined">{formatDate(job.joinDate)}</DetailRow>
           </>
         )}
       </div>

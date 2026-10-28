@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import type { FormInputProps } from '../../shared/types';
+import { FormField } from './FormField';
+import { getFieldProps, inputClass } from './fieldUtils';
 
 interface PasswordInputProps extends FormInputProps {
   placeholder: string;
@@ -14,39 +16,34 @@ export const PasswordInput = ({
   error
 }: PasswordInputProps) => {
   const [show, setShow] = useState(false);
-  const { isTouched, errors } = field.state.meta;
-  const resolvedValue = String(field.state.value ?? '');
-  const resolvedError =
-    error ?? (isTouched && errors.length > 0 ? errors[0]?.message : '');
+  const { id, error: resolvedError, ariaProps } = getFieldProps(field, error);
 
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
+    <FormField label={label} htmlFor={id} error={resolvedError}>
       <div className="relative">
         <input
+          id={id}
+          name={field.name}
           type={show ? 'text' : 'password'}
-          value={resolvedValue}
+          autoComplete="current-password"
+          enterKeyHint="go"
+          value={String(field.state.value ?? '')}
           onChange={(e) => field.handleChange(e.target.value)}
           onBlur={field.handleBlur}
           disabled={disabled}
           placeholder={placeholder}
-          className={`w-full border px-3 py-2 rounded-lg text-sm ${
-            disabled ? 'bg-gray-100' : 'border-gray-300'
-          } ${resolvedError ? 'border-red-500' : ''}`}
+          className={inputClass(resolvedError, 'pr-12')}
+          {...ariaProps}
         />
         <button
           type="button"
           onClick={() => setShow(!show)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          className="icon-btn absolute top-1/2 right-1 -translate-y-1/2 text-slate-400"
+          aria-label={show ? 'Hide password' : 'Show password'}
         >
-          {show ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+          {show ? <FiEyeOff size={18} /> : <FiEye size={18} />}
         </button>
       </div>
-      {resolvedError && (
-        <p className="text-red-500 text-xs mt-1">{resolvedError}</p>
-      )}
-    </div>
+    </FormField>
   );
 };

@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetcher } from '../../lib/fetcher';
+import type { ObjectId } from '../../shared/schemas/common.schema';
 import type { Account, Transactions } from '../../shared/types';
 import { PageLayout } from '../Layout';
+import { FormSkeleton } from '../placeholders/FormSkeleton';
 import { TransactionForm } from '../TransactionForm';
-import type { ObjectId } from '../../shared/schemas/common.schema';
+import { ErrorState } from '../ui/ErrorState';
 
 type Props = {
   mode: 'create' | 'edit';
@@ -12,9 +14,9 @@ type Props = {
 };
 
 export function TransactionPage({ mode, accountId, transactionId }: Props) {
-  const title = mode === 'edit' ? 'Edit Transaction' : 'Create Transaction';
+  const title = mode === 'edit' ? 'Edit Transaction' : 'New Transaction';
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['account', accountId, 'basic'],
     queryFn: () => fetcher<Account>(`/account/${accountId}/basic`),
     staleTime: 60 * 60 * 1000
@@ -23,7 +25,8 @@ export function TransactionPage({ mode, accountId, transactionId }: Props) {
   const {
     data: transactionData,
     isLoading: isTransLoading,
-    error: transError
+    error: transError,
+    refetch: refetchTrans
   } = useQuery({
     queryKey: ['transaction', transactionId, 'basic'],
     queryFn: () => fetcher<Transactions>(`/transaction/${transactionId}/basic`),
@@ -31,31 +34,35 @@ export function TransactionPage({ mode, accountId, transactionId }: Props) {
     enabled: !!transactionId && mode === 'edit'
   });
 
-  if (isLoading || isTransLoading) {
-    return <PageLayout title={title}>Loading...</PageLayout>;
-  }
+  const renderBody = () => {
+    if (isLoading || isTransLoading) return <FormSkeleton fields={4} />;
 
-  if (error || transError) {
+    if (error || transError) {
+      return (
+        <ErrorState
+          message={error?.message || transError?.message}
+          onRetry={() => {
+            refetch();
+            if (transactionId) refetchTrans();
+          }}
+        />
+      );
+    }
+
+    if (!data || (transactionId && !transactionData)) {
+      return <ErrorState message="Could not find this account" />;
+    }
+
     return (
-      <PageLayout title={title}>
-        <div>{error?.message || transError?.message}</div>
-      </PageLayout>
+      <div className="card p-4">
+        <TransactionForm name={data.name} accountId={accountId} transaction={transactionData} />
+      </div>
     );
-  }
-
-  if (!data || (transactionId && !transactionData)) {
-    return <div>Could not find given account</div>;
-  }
+  };
 
   return (
-    <PageLayout title={title}>
-      <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 space-y-5">
-        <TransactionForm
-          name={data.name}
-          accountId={accountId}
-          transaction={transactionData}
-        />
-      </div>
+    <PageLayout title={title} description={data?.name}>
+      {renderBody()}
     </PageLayout>
   );
 }

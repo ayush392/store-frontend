@@ -1,5 +1,6 @@
 import { useForm, useStore } from '@tanstack/react-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
 import { fetcher } from '../lib/fetcher';
 import { notifyError, notifySuccess } from '../lib/toast';
 import { DateInput } from './form/DateInput';
@@ -18,6 +19,7 @@ import z from 'zod';
 import { UploadBills, type BillFile } from './UploadBills';
 import { useState } from 'react';
 import { cloudinarySignedUpload } from '../shared/utils/cloudinary';
+import { haptics } from '../shared/utils/haptics';
 
 type Props = {
   name: string;
@@ -28,6 +30,7 @@ type Props = {
 export const TransactionForm = ({ name, accountId, transaction }: Props) => {
   const [bills, setBills] = useState<BillFile[]>([]);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (formData: CreateTransaction | UpdateTransaction) => {
@@ -41,12 +44,25 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
         ? 'Transaction updated successfully'
         : 'Transaction created for ' + name;
       notifySuccess(message);
-      queryClient.invalidateQueries({ queryKey: ['staff', accountId] });
-      queryClient.invalidateQueries({ queryKey: ['customer', accountId] });
-      queryClient.invalidateQueries({ queryKey: ['store', accountId] });
+      haptics.success();
+      // Detail screens, lists (due amounts) and home (recent + chart) all change
+      for (const key of ['staff', 'customer', 'store']) {
+        queryClient.invalidateQueries({ queryKey: [key, accountId] });
+      }
+      for (const key of ['staffs', 'customers', 'stores', 'recent', 'graph']) {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
+      if (transaction) {
+        queryClient.invalidateQueries({ queryKey: ['transaction', transaction._id] });
+      }
+
+      // Pop back to the account screen, like a native form sheet
+      if (router.history.canGoBack()) router.history.back();
+      else router.navigate({ to: '/', replace: true });
     },
     onError: (error) => {
       notifyError(error.message);
+      haptics.error();
     }
   });
 
@@ -89,8 +105,6 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
         bills.map((bill) => cloudinarySignedUpload(bill.file, accountId))
       );
 
-      console.log({ uploadImages });
-
       setBills([]);
       mutate({ ...value, images: uploadImages });
       form.reset();
@@ -112,6 +126,7 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
 
   return (
     <form
+      noValidate
       className="space-y-4"
       onSubmit={(e) => {
         e.preventDefault();
@@ -132,7 +147,7 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
         </Field>
 
         <Field name="amount">
-          {(field) => <NumberInput label="Amount" field={field} />}
+          {(field) => <NumberInput label="Amount" field={field} prefix="₹" />}
         </Field>
       </div>
 
@@ -164,15 +179,16 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
       <button
         disabled={isPending || isSubmitting || !isValid}
         type="submit"
-        className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60 active:bg-green-700"
+        onClick={() => haptics.medium()}
+        className="btn btn-lg btn-primary mt-2"
       >
         {transaction
           ? isPending || isSubmitting
-            ? 'Updating...'
-            : 'Update'
+            ? 'Updating…'
+            : 'Update Transaction'
           : isPending || isSubmitting
-            ? 'Saving...'
-            : 'Save'}
+            ? 'Saving…'
+            : 'Save Transaction'}
       </button>
     </form>
   );

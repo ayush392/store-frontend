@@ -1,5 +1,6 @@
+import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
-import { FiEdit3, FiTrash2 } from 'react-icons/fi';
+import { FiChevronDown, FiEdit3, FiTrash2 } from 'react-icons/fi';
 import {
   formatAmount,
   formatDate,
@@ -8,7 +9,7 @@ import {
   getAmountSymbol
 } from '../shared/format';
 import type { Transactions } from '../shared/types';
-import { Link } from '@tanstack/react-router';
+import { haptics } from '../shared/utils/haptics';
 import { TransactionImageViewer } from './TransactionImageViewer';
 
 type Props = {
@@ -16,111 +17,125 @@ type Props = {
   type: 'customers' | 'stores' | 'staffs';
 };
 
+/** Tap a row to reveal its actions (Edit / Delete). */
+const getEditLink = (type: Props['type'], tx: Transactions) => {
+  switch (type) {
+    case 'staffs':
+      return {
+        to: '/staffs/$staffId/transactions/$txId/edit',
+        params: { staffId: tx.accountId, txId: tx._id }
+      } as const;
+    case 'customers':
+      return {
+        to: '/customers/$customerId/transactions/$txId/edit',
+        params: { customerId: tx.accountId, txId: tx._id }
+      } as const;
+    case 'stores':
+      return {
+        to: '/stores/$storeId/transactions/$txId/edit',
+        params: { storeId: tx.accountId, txId: tx._id }
+      } as const;
+  }
+};
+
 export const TransactionList = ({ transactions, type }: Props) => {
   const [expandedId, setExpandedId] = useState<string>('');
 
   const toggleExpand = (id: string) => {
-    setExpandedId((prev: string) => (prev === id ? '' : id));
-  };
-
-  const getEditTransactionPageLink = (transaction: Transactions) => {
-    switch (type) {
-      case 'staffs':
-        return {
-          to: '/staffs/$staffId/transactions/$txId/edit',
-          params: { staffId: transaction.accountId, txId: transaction._id }
-        };
-      case 'customers':
-        return {
-          to: '/customers/$customerId/transactions/$txId/edit',
-          params: { customerId: transaction.accountId, txId: transaction._id }
-        };
-      case 'stores':
-        return {
-          to: '/stores/$storeId/transactions/$txId/edit',
-          params: { storeId: transaction.accountId, txId: transaction._id }
-        };
-    }
+    haptics.selection();
+    setExpandedId((prev) => (prev === id ? '' : id));
   };
 
   return (
-    <div className="divide-y divide-gray-200">
+    <div className="list-divider">
       {transactions.map((transaction) => {
         const isExpanded = expandedId === transaction._id;
 
         return (
           <div
             key={transaction._id}
-            className={`p-4 transition ${isExpanded ? 'bg-gray-50' : ''}`}
+            className={`transition-colors duration-150 ${isExpanded ? 'bg-slate-50' : ''}`}
           >
-            <div
-              className="flex items-center justify-between cursor-pointer"
+            <button
+              type="button"
+              aria-expanded={isExpanded}
               onClick={() => toggleExpand(transaction._id)}
+              className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors active:bg-slate-100"
             >
-              {/* Left */}
-              <div className="flex flex-col flex-1 gap-1 min-w-0 pr-3">
-                <div className="font-medium text-gray-800 truncate">
+              <div className="min-w-0 flex-1">
+                <div className="text-[15px] font-semibold tracking-tight text-slate-900">
                   {formatDate(transaction.date)}
                 </div>
-
                 <div
-                  className={`text-sm text-gray-500 ${
-                    isExpanded ? 'whitespace-normal' : 'truncate max-w-60'
+                  className={`mt-0.5 text-xs text-slate-500 ${
+                    isExpanded ? 'break-words whitespace-normal' : 'truncate'
                   }`}
                 >
-                  {transaction.note}
+                  {transaction.note || 'No notes added'}
                 </div>
               </div>
 
-              {/* Right */}
-              <div className="text-right shrink-0 ml-2">
+              <div className="shrink-0 text-right">
                 <div
-                  className={`font-semibold text-base ${getAmountColor(
+                  className={`text-sm font-bold tracking-tight tabular-nums ${getAmountColor(
                     transaction.transactionType
                   )}`}
                 >
                   {getAmountSymbol(transaction.amountChange)}
                   {formatAmount(transaction.amount)}
                 </div>
-
-                <div className="text-sm text-gray-500 capitalize">
+                <div className="mt-0.5 text-[11px] font-medium text-slate-400">
                   {formatEnum(transaction.transactionType)}
                 </div>
               </div>
-            </div>
 
-            <TransactionImageViewer transaction={transaction} />
+              <FiChevronDown
+                size={16}
+                aria-hidden="true"
+                className={`shrink-0 text-slate-300 transition-transform duration-200 ${
+                  isExpanded ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
 
-            {/* Actions */}
+            {(transaction.images?.length ?? 0) > 0 && (
+              <div className="-mt-1 px-4 pb-3">
+                <TransactionImageViewer transaction={transaction} />
+              </div>
+            )}
+
+            {/* Expandable action bar */}
             <div
-              className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                isExpanded
-                  ? 'max-h-40 opacity-100 translate-y-0'
-                  : 'max-h-0 opacity-0 -translate-y-1'
+              className={`grid transition-all duration-200 ease-out ${
+                isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
               }`}
             >
-              {isExpanded && (
-                <div className="mt-3 pt-3 border-t border-gray-200 flex justify-end gap-3">
+              <div className="overflow-hidden">
+                <div className="grid grid-cols-2 gap-2 px-4 pb-3.5">
                   <Link
-                    {...getEditTransactionPageLink(transaction)}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-blue-50 text-blue-600 active:bg-blue-100"
+                    {...getEditLink(type, transaction)}
+                    onClick={() => haptics.selection()}
+                    tabIndex={isExpanded ? 0 : -1}
+                    className="btn btn-md btn-tinted"
                   >
-                    <FiEdit3 size={14} />
+                    <FiEdit3 size={15} />
                     Edit
                   </Link>
 
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={() => {
+                      haptics.heavy();
                       console.log('Delete', transaction._id);
                     }}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-red-50 text-red-600 active:bg-red-100"
+                    type="button"
+                    tabIndex={isExpanded ? 0 : -1}
+                    className="btn btn-md btn-tinted-danger"
                   >
-                    <FiTrash2 size={14} />
+                    <FiTrash2 size={15} />
                     Delete
                   </button>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         );

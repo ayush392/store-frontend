@@ -21,12 +21,13 @@ export const formatDate = (dateString: string) => {
 };
 
 export const getAmountColor = (type: TransactionType) => {
+  // Same palette as the chart: money out = rose, money in = blue
   if (type === 'UDHAAR' || type === 'ADVANCE') {
-    return 'text-red-500';
+    return 'text-rose-600';
   } else if (type === 'PAYMENT') {
     return 'text-blue-600';
   }
-  return 'text-gray-600';
+  return 'text-slate-600';
 };
 
 export const getAmountSymbol = (amount: number) => {

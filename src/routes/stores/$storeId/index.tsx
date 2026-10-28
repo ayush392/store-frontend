@@ -1,15 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { PageLayout } from '../../../components/Layout';
-import { ProfileCard } from '../../../components/ProfileCard';
-import { SectionHeader } from '../../../components/SectionHeader';
-import { TransactionList } from '../../../components/TransactionList';
-import { fetcher } from '../../../lib/fetcher';
-import type { Transactions, UserDetails } from '../../../shared/types';
-import { ListSkeleton } from '../../../components/placeholders/ListSkeleton';
-import { ProfileCardSkeleton } from '../../../components/placeholders/ProfileSkeleton';
-import { SkeletonWrapper } from '../../../components/placeholders/SkeletonWrapper';
-import { FloatingButton } from '../../../components/FloatingButton';
+import { AccountDetailPage } from '../../../components/pages/AccountDetailPage';
 
 export const Route = createFileRoute('/stores/$storeId/')({
   component: StoreDetailsPage
@@ -17,48 +7,5 @@ export const Route = createFileRoute('/stores/$storeId/')({
 
 function StoreDetailsPage() {
   const { storeId } = Route.useParams();
-  const title = 'Store Details';
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['store', storeId],
-    queryFn: () => fetcher<UserDetails>(`/account/${storeId}/`)
-  });
-
-  if (error) {
-    return (
-      <PageLayout title={title}>
-        <div>{error.message}</div>
-      </PageLayout>
-    );
-  }
-
-  return (
-    <PageLayout title={title}>
-      <SkeletonWrapper<UserDetails>
-        isLoading={isLoading}
-        skeleton={<ProfileCardSkeleton />}
-        data={data}
-      >
-        {data && (
-          <ProfileCard profile={data.profile} employment={data.employment} />
-        )}
-      </SkeletonWrapper>
-
-      <div className="bg-white rounded-lg shadow-sm">
-        <SectionHeader title="Transactions" filterOptions={['all']} />
-        <SkeletonWrapper<Transactions[]>
-          isLoading={isLoading}
-          skeleton={<ListSkeleton />}
-          data={data?.transactions}
-          message="No transactions found"
-        >
-          {data && (
-            <TransactionList transactions={data.transactions} type="stores" />
-          )}
-        </SkeletonWrapper>
-      </div>
-
-      <FloatingButton link={`./transactions/new`} label="Pay" />
-    </PageLayout>
-  );
+  return <AccountDetailPage accountId={storeId} accountType="STORE" basePath="stores" />;
 }

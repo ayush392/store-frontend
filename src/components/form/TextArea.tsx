@@ -1,4 +1,6 @@
 import type { FormInputProps } from '../../shared/types';
+import { FormField } from './FormField';
+import { getFieldProps, inputClass } from './fieldUtils';
 
 interface TextAreaProps extends FormInputProps {
   rows?: number;
@@ -13,28 +15,22 @@ export const TextArea = ({
   disabled = false,
   error
 }: TextAreaProps) => {
-  const { isTouched, errors } = field.state.meta;
-  const resolvedValue = String(field.state.value ?? '');
-  const resolvedError =
-    error ?? (isTouched && errors.length > 0 ? errors[0]?.message : '');
+  const { id, error: resolvedError, ariaProps } = getFieldProps(field, error);
 
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
+    <FormField label={label} htmlFor={id} error={resolvedError}>
       <textarea
-        value={resolvedValue}
+        id={id}
+        name={field.name}
+        value={String(field.state.value ?? '')}
         onChange={(e) => field.handleChange(e.target.value)}
         onBlur={field.handleBlur}
         rows={rows}
         disabled={disabled}
         placeholder={placeholder}
-        className={`block w-full border px-3 py-2 rounded-lg text-sm ${
-          disabled ? 'bg-gray-100' : 'border-gray-300'
-        } ${resolvedError ? 'border-red-500' : ''}`}
+        className={inputClass(resolvedError, 'block resize-none')}
+        {...ariaProps}
       />
-      {resolvedError && <p className="text-red-500 text-xs">{resolvedError}</p>}
-    </div>
+    </FormField>
   );
 };

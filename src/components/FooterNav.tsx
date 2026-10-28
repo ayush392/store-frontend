@@ -1,42 +1,60 @@
-import { Link } from '@tanstack/react-router';
-import {
-  CustomerIcon,
-  HomeIcon,
-  RecycleIcon,
-  StaffIcon,
-  StoreIcon
-} from '../shared/icons';
+import { Link, useRouterState } from '@tanstack/react-router';
+import { CustomerIcon, HomeIcon, RecycleIcon, StaffIcon, StoreIcon } from '../shared/icons';
+import { haptics } from '../shared/utils/haptics';
 
 const navItems = [
   { path: '/', icon: HomeIcon, label: 'Home' },
   { path: '/staffs', icon: StaffIcon, label: 'Staff' },
-  { path: '/customers', icon: CustomerIcon, label: 'Customer' },
-  { path: '/stores', icon: StoreIcon, label: 'Store' },
+  { path: '/customers', icon: CustomerIcon, label: 'Customers' },
+  { path: '/stores', icon: StoreIcon, label: 'Stores' },
   { path: '/recycle', icon: RecycleIcon, label: 'Recycle' }
 ];
 
+/** Bottom tab bar. Re-tapping the active tab scrolls to top, like native apps. */
 export const FooterNav = () => {
+  const currentPath = useRouterState({ select: (s) => s.location.pathname });
+
   return (
-    <footer className="sticky bottom-0 z-50 bg-white border-t border-gray-200 px-2 py-2">
-      <nav className="flex justify-around">
-        {navItems.map(({ path, icon: Icon, label }) => (
-          <Link
-            key={path}
-            to={path}
-            preload="intent"
-            activeProps={{
-              className:
-                'flex flex-col items-center py-2 px-1 rounded-lg min-w-0 flex-1 text-blue-600 bg-blue-50'
-            }}
-            inactiveProps={{
-              className:
-                'flex flex-col items-center py-2 px-1 rounded-lg min-w-0 flex-1 text-gray-600'
-            }}
-          >
-            <Icon size={20} />
-            <span className="text-xs mt-1 font-medium truncate">{label}</span>
-          </Link>
-        ))}
+    <footer
+      className="app-bar fixed right-0 bottom-0 left-0 z-40 border-t pb-[max(0.375rem,env(safe-area-inset-bottom,0px))]"
+      style={{ viewTransitionName: 'tab-bar' }}
+    >
+      <nav aria-label="Main" className="mx-auto flex h-14 max-w-lg items-stretch px-2">
+        {navItems.map(({ path, icon: Icon, label }) => {
+          const isActive = path === '/' ? currentPath === '/' : currentPath.startsWith(path);
+          const isTabRoot = currentPath === path;
+
+          return (
+            <Link
+              key={path}
+              to={path}
+              aria-current={isActive ? 'page' : undefined}
+              onClick={(e) => {
+                haptics.selection();
+                if (isTabRoot) {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              className="group flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 select-none"
+            >
+              <span
+                className={`flex h-7 w-14 items-center justify-center rounded-full transition-all duration-200 group-active:scale-90 ${
+                  isActive ? 'bg-blue-600/10 text-blue-600' : 'text-slate-500'
+                }`}
+              >
+                <Icon size={20} strokeWidth={isActive ? 2.4 : 2} />
+              </span>
+              <span
+                className={`truncate text-[11px] tracking-tight transition-colors ${
+                  isActive ? 'font-semibold text-blue-600' : 'font-medium text-slate-500'
+                }`}
+              >
+                {label}
+              </span>
+            </Link>
+          );
+        })}
       </nav>
     </footer>
   );

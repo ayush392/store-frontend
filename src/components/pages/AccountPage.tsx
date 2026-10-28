@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
+import { fetcher } from '../../lib/fetcher';
 import { formatEnum } from '../../shared/format';
 import type { AccountType } from '../../shared/schemas/account.schema';
 import type { ObjectId } from '../../shared/schemas/common.schema';
+import type { Account } from '../../shared/types';
 import { AccountForm } from '../AccountForm';
 import { PageLayout } from '../Layout';
-import { fetcher } from '../../lib/fetcher';
-import type { Account } from '../../shared/types';
+import { FormSkeleton } from '../placeholders/FormSkeleton';
+import { ErrorState } from '../ui/ErrorState';
 
 type Props = {
   accountType: AccountType;
@@ -14,35 +16,27 @@ type Props = {
 };
 
 export function AccountPage({ accountType, mode, accountId }: Props) {
-  const title =
-    mode === 'edit'
-      ? `Edit ${formatEnum(accountType)}'s Profile`
-      : `Create new ${formatEnum(accountType)}`;
+  const label = formatEnum(accountType);
+  const title = mode === 'edit' ? `Edit ${label}` : `New ${label}`;
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: [],
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['account', accountId, 'basic'],
     queryFn: () => fetcher<Account>(`/account/${accountId}/basic`),
-    staleTime: 10 * 60 * 1000, //10min
-    enabled: mode === 'edit'
+    staleTime: 10 * 60 * 1000,
+    enabled: mode === 'edit' && !!accountId
   });
 
-  if (isLoading) {
-    return <PageLayout title={title}>Loading...</PageLayout>;
-  }
-
-  if (error) {
-    return (
-      <PageLayout title={title}>
-        <div>{error.message}</div>
-      </PageLayout>
-    );
-  }
-
   return (
-    <PageLayout title={title}>
-      <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 space-y-5">
-        <AccountForm mode={mode} accountType={accountType} account={data} />
-      </div>
+    <PageLayout title={title} description={mode === 'edit' ? data?.name : undefined}>
+      {isLoading ? (
+        <FormSkeleton fields={5} />
+      ) : error ? (
+        <ErrorState message={error.message} onRetry={() => refetch()} />
+      ) : (
+        <div className="card p-4">
+          <AccountForm mode={mode} accountType={accountType} account={data} />
+        </div>
+      )}
     </PageLayout>
   );
 }

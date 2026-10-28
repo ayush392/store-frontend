@@ -1,231 +1,165 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { FiCheck, FiClock, FiDollarSign, FiX } from 'react-icons/fi';
-import { fetcher } from '../../lib/fetcher';
-import { notifyError, notifySuccess } from '../../lib/toast';
-import { formatAmount, formatEnum } from '../../shared/format';
-import type { Staff } from '../../shared/types';
-import type {
-  AttendanceType,
-  BulkAttendance
-} from '../../shared/schemas/staff.schema';
+import { FiCheck, FiClock, FiX } from 'react-icons/fi';
+import { AccountRow } from '../../components/AccountRow';
+import { FloatingButton } from '../../components/FloatingButton';
 import { ListSkeleton } from '../../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../../components/placeholders/SkeletonWrapper';
-import { FloatingButton } from '../../components/FloatingButton';
+import { PullToRefresh } from '../../components/PullToRefresh';
+import { SectionHeader } from '../../components/SectionHeader';
+import { ErrorState } from '../../components/ui/ErrorState';
+import { fetcher } from '../../lib/fetcher';
+import { notifyError, notifySuccess } from '../../lib/toast';
+import { formatAmount } from '../../shared/format';
+import type { AttendanceType, BulkAttendance } from '../../shared/schemas/staff.schema';
+import { attendanceTheme, neutralChip } from '../../shared/theme';
+import type { Staff } from '../../shared/types';
+import { haptics } from '../../shared/utils/haptics';
 
 export const Route = createFileRoute('/staffs/')({
   component: StaffsPage
 });
 
+const bulkActions: Array<{ status: AttendanceType; label: string; icon: typeof FiCheck; className: string }> = [
+  { status: 'PRESENT', label: 'Present', icon: FiCheck, className: 'btn-success' },
+  { status: 'ABSENT', label: 'Absent', icon: FiX, className: 'btn-danger' },
+  { status: 'HALF', label: 'Half', icon: FiClock, className: 'btn-warning' }
+];
+
+/** iOS-style round selection indicator. */
+const SelectionCircle = ({ checked }: { checked: boolean }) => (
+  <span
+    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 ${
+      checked ? 'scale-105 border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white'
+    }`}
+  >
+    {checked && <FiCheck size={14} strokeWidth={3.5} />}
+  </span>
+);
+
 function StaffsPage() {
   const queryClient = useQueryClient();
-  const { data, isLoading, error } = useQuery({
+  const [selectedStaffs, setSelectedStaffs] = useState<Set<string>>(new Set());
+
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['staffs'],
     queryFn: () => fetcher<Staff[]>('/staff')
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (data: BulkAttendance) =>
-      fetcher('/staff/attendance/bulk', 'PATCH', data),
+    mutationFn: (attendanceData: BulkAttendance) =>
+      fetcher('/staff/attendance/bulk', 'PATCH', attendanceData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffs'] });
+      queryClient.invalidateQueries({ queryKey: ['calendar'] });
       notifySuccess('Attendance updated');
+      haptics.success();
       setSelectedStaffs(new Set());
     },
-    onError: (error) => {
-      notifyError(error.message);
+    onError: (err) => {
+      notifyError(err.message);
+      haptics.error();
     }
   });
 
-  const [selectedStaffs, setSelectedStaffs] = useState<Set<string>>(new Set());
+  const total = data?.length ?? 0;
+  const allSelected = total > 0 && selectedStaffs.size === total;
+  const isSelecting = selectedStaffs.size > 0;
 
-  const getStatusColor = (status: AttendanceType) => {
-    switch (status) {
-      case 'PRESENT':
-        return 'bg-green-100 text-green-800';
-      case 'ABSENT':
-        return 'bg-red-100 text-red-800';
-      case 'HALF':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const handleSelectStaff = (type: 'all' | '', id?: string) => {
+  const toggleStaff = (id: string) => {
+    haptics.selection();
     setSelectedStaffs((prev) => {
-      const newSet = new Set(prev);
-
-      if (type === 'all') {
-        if (newSet.size === data?.length || 0) {
-          return new Set(); // clear all
-        } else {
-          data?.forEach((staff) => newSet.add(staff.employmentId));
-        }
-      } else if (id) {
-        if (newSet.has(id)) newSet.delete(id);
-        else newSet.add(id);
-      }
-
-      return newSet;
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   };
 
+  const toggleAll = () => {
+    haptics.selection();
+    setSelectedStaffs(allSelected ? new Set() : new Set(data?.map((s) => s.employmentId)));
+  };
+
   const handleBulkAttendance = (status: AttendanceType) => {
+    haptics.medium();
     const staffData = data
       ?.filter((staff) => selectedStaffs.has(staff.employmentId))
-      .map((staff) => {
-        return {
-          accountId: staff.account._id,
-          employmentId: staff.employmentId,
-          status
-        };
-      });
+      .map((staff) => ({
+        accountId: staff.account._id,
+        employmentId: staff.employmentId,
+        status
+      }));
 
     if (staffData && staffData.length > 0) mutate(staffData);
   };
 
-  if (error) {
-    console.log(error);
-    return <div>{error.message}</div>;
-  }
+  if (error) return <ErrorState message={error.message} onRetry={() => refetch()} />;
 
   return (
-    <div className="">
-      {/* Header with bulk actions */}
-      {selectedStaffs.size > 0 && (
-        <div className="flex items-center space-x-2 pb-4">
-          <span className="text-sm text-gray-600">
-            {selectedStaffs.size} selected
-          </span>
-          <div className="flex space-x-2">
-            <button
-              disabled={isPending}
-              onClick={() => handleBulkAttendance('PRESENT')}
-              className="bg-green-600 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1 disabled:opacity-60"
-            >
-              <FiCheck size={14} />
-              <span>Present</span>
-            </button>
-            <button
-              disabled={isPending}
-              onClick={() => handleBulkAttendance('ABSENT')}
-              className="bg-red-600 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1 disabled:opacity-60"
-            >
-              <FiX size={14} />
-              <span>Absent</span>
-            </button>
-            <button
-              disabled={isPending}
-              onClick={() => handleBulkAttendance('HALF')}
-              className="bg-yellow-600 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1 disabled:opacity-60"
-            >
-              <FiClock size={14} />
-              <span>Half Day</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Staff List */}
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-800">Staffs</h3>
-            <button
-              onClick={() => handleSelectStaff('all')}
-              className="text-sm text-blue-600 font-medium"
-            >
-              {selectedStaffs.size === data?.length
-                ? 'Deselect All'
-                : 'Select All'}
-            </button>
-          </div>
-        </div>
+    <PullToRefresh onRefresh={() => refetch()}>
+      <div className="card-list">
+        <SectionHeader
+          title="Staff"
+          count={data?.length}
+          action={
+            total > 0 && (
+              <button type="button" onClick={toggleAll} className="btn btn-sm btn-tinted">
+                {allSelected ? 'Deselect all' : 'Select all'}
+              </button>
+            )
+          }
+        />
 
         <SkeletonWrapper<Staff[]>
           isLoading={isLoading}
-          skeleton={<ListSkeleton showButton={true} />}
+          skeleton={<ListSkeleton showButton />}
           data={data}
-          message="No staff found"
+          message="No staff yet"
         >
-          <div className="divide-y divide-gray-200">
+          <div className="list-divider">
             {data?.map((staff) => {
               const isSelected = selectedStaffs.has(staff.employmentId);
+              const theme = staff.status ? attendanceTheme[staff.status] : undefined;
 
               return (
-                <div
-                  key={staff.employmentId}
-                  className={`p-4 border-b border-gray-100 last:border-b-0 ${
-                    isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                  } transition-colors`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleSelectStaff('', staff.employmentId)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                <div key={staff.employmentId} className="flex items-center">
+                  {/* Selection toggle sits outside the row link so it doesn't navigate */}
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={isSelected}
+                    aria-label={`Select ${staff.account.name}`}
+                    onClick={() => toggleStaff(staff.employmentId)}
+                    className={`flex h-full items-center self-stretch pr-1 pl-4 transition-colors ${
+                      isSelected ? 'bg-blue-50/70' : 'active:bg-slate-100'
+                    }`}
+                  >
+                    <SelectionCircle checked={isSelected} />
+                  </button>
+
+                  <div className="min-w-0 flex-1">
+                    <AccountRow
+                      name={staff.account.name}
+                      accountType="STAFF"
+                      due={staff.account.currentOutstanding}
+                      detailLink={`/staffs/${staff.account._id}`}
+                      payLink={`/staffs/${staff.account._id}/transactions/new`}
+                      selected={isSelected}
+                      subtitle={
+                        <span className="flex items-center gap-2">
+                          <span className={`chip ${theme?.chip ?? neutralChip}`}>
+                            {theme?.label ?? 'Not marked'}
+                          </span>
+                          <span className="font-medium text-slate-400">
+                            {staff.salaryType === 'DAILY'
+                              ? `${formatAmount(staff.salary)}/day`
+                              : 'Monthly'}
+                          </span>
+                        </span>
+                      }
                     />
-
-                    <div className="flex-1">
-                      {/* Staff Card Content */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3 flex-1">
-                          <Link
-                            to="/staffs/$staffId"
-                            params={{ staffId: staff.account._id }}
-                            className="flex-1"
-                          >
-                            <div className="font-semibold text-gray-800 text-left hover:text-blue-600 transition-colors ">
-                              {staff.account.name}
-                            </div>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                                  staff.status
-                                )}`}
-                              >
-                                {formatEnum(staff.status) || 'None'}
-                              </span>
-                              <span className="text-xs font-semibold text-gray-500">
-                                {staff.salaryType === 'DAILY'
-                                  ? `${formatAmount(staff.salary)}/day`
-                                  : 'Monthly'}
-                              </span>
-                            </div>
-                          </Link>
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          <div className="text-right">
-                            <div className="text-xs text-gray-500 mb-1">
-                              Due
-                            </div>
-                            <div
-                              className={`font-bold text-sm ${
-                                staff.account.currentOutstanding > 0
-                                  ? 'text-red-600'
-                                  : 'text-gray-400'
-                              }`}
-                            >
-                              {formatAmount(staff.account.currentOutstanding)}
-                            </div>
-                          </div>
-
-                          {/* Pay Button */}
-                          <Link
-                            to="/staffs/$staffId/transactions/new"
-                            params={{ staffId: staff.account._id }}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm flex items-center space-x-1"
-                          >
-                            <FiDollarSign size={14} />
-                            <span>Pay</span>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               );
@@ -234,7 +168,48 @@ function StaffsPage() {
         </SkeletonWrapper>
       </div>
 
-      <FloatingButton link="/staffs/new" label="Staff" />
-    </div>
+      <FloatingButton link="/staffs/new" label="Staff" hidden={isSelecting} />
+      {/* Extra room so the taller toolbar doesn't cover the last rows */}
+      {isSelecting && <div aria-hidden="true" className="h-14" />}
+
+      {/* Bulk attendance toolbar replaces the FAB while staff are selected */}
+      {isSelecting && (
+        <div
+          role="toolbar"
+          aria-label="Mark attendance for selected staff"
+          className="card fixed right-3 bottom-[calc(var(--tab-bar-h)+0.75rem)] left-3 z-30 mx-auto max-w-lg p-2.5 shadow-lg animate-rise-in"
+        >
+          <div className="mb-2 flex items-center justify-between px-1">
+            <span className="text-[13px] font-semibold text-slate-700">
+              Mark {selectedStaffs.size} as
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                haptics.selection();
+                setSelectedStaffs(new Set());
+              }}
+              className="text-[13px] font-semibold text-blue-600"
+            >
+              Cancel
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {bulkActions.map(({ status, label, icon: Icon, className }) => (
+              <button
+                key={status}
+                type="button"
+                disabled={isPending}
+                onClick={() => handleBulkAttendance(status)}
+                className={`btn btn-md ${className}`}
+              >
+                <Icon size={15} />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </PullToRefresh>
   );
 }

@@ -1,5 +1,6 @@
 import { useForm, useStore } from '@tanstack/react-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
 import { fetcher } from '../lib/fetcher';
 import { notifyError, notifySuccess } from '../lib/toast';
 import { formatEnum } from '../shared/format';
@@ -9,6 +10,8 @@ import { NumberInput } from './form/NumberInput';
 import { SelectInput } from './form/SelectInput';
 import { TextArea } from './form/TextArea';
 import { TextInput } from './form/TextInput';
+import { haptics } from '../shared/utils/haptics';
+import { MdOutlineContactPhone } from 'react-icons/md';
 import type {
   AccountType,
   CreateAccount
@@ -21,8 +24,26 @@ type Props = {
   account?: Account;
 };
 
+// Contact Picker API is Android Chrome only; hide the button elsewhere (e.g. iOS)
+const hasContactPicker =
+  typeof navigator !== 'undefined' &&
+  'contacts' in navigator &&
+  'ContactsManager' in window &&
+  typeof (
+    navigator as unknown as {
+      contacts?: { select?: (...args: unknown[]) => unknown };
+    }
+  ).contacts?.select === 'function';
+
+const listPath: Record<AccountType, 'staffs' | 'customers' | 'stores'> = {
+  STAFF: 'staffs',
+  CUSTOMER: 'customers',
+  STORE: 'stores'
+};
+
 export const AccountForm = ({ mode, accountType, account }: Props) => {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (formData: unknown) => {
@@ -43,10 +64,21 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
           ? 'Profile updated successfully'
           : `New ${accType} created`;
       notifySuccess(message);
-      queryClient.invalidateQueries({ queryKey: [accType] });
+      haptics.success();
+      queryClient.invalidateQueries({ queryKey: [listPath[accountType]] });
+      if (account?._id) {
+        queryClient.invalidateQueries({ queryKey: [accountType.toLowerCase(), account._id] });
+        queryClient.invalidateQueries({ queryKey: ['account', account._id] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['recent'] });
+
+      // Pop back to where the user came from, like a native form sheet
+      if (router.history.canGoBack()) router.history.back();
+      else router.navigate({ to: `/${listPath[accountType]}`, replace: true });
     },
     onError: (error) => {
       notifyError(error.message);
+      haptics.error();
     }
   });
 
@@ -87,8 +119,81 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
   const isValid = useStore(form.store, (state) => state.isValid);
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
 
+  const handlePickContact = async (field?: {
+    handleChange: (val: string) => void;
+  }) => {
+    haptics.selection();
+
+    if (!hasContactPicker) {
+      notifyError(
+        'Contact Picker is not supported on this browser/device. Please type the mobile number manually.'
+      );
+      return;
+    }
+
+    try {
+      const navContacts = (
+        navigator as unknown as {
+          contacts: {
+            select: (
+              properties: string[],
+              options?: { multiple?: boolean }
+            ) => Promise<Array<{ name?: string[]; tel?: string[] }>>;
+          };
+        }
+      ).contacts;
+
+      const contacts = await navContacts.select(['name', 'tel'], {
+        multiple: false
+      });
+
+      if (contacts && contacts.length > 0) {
+        const contact = contacts[0];
+        const rawPhone = contact.tel?.[0];
+
+        if (rawPhone) {
+          // Normalize and clean phone number
+          let cleaned = rawPhone.replace(/\D/g, '');
+          if (cleaned.length === 12 && cleaned.startsWith('91')) {
+            cleaned = cleaned.slice(2);
+          } else if (cleaned.length === 11 && cleaned.startsWith('0')) {
+            cleaned = cleaned.slice(1);
+          } else if (cleaned.length > 10) {
+            cleaned = cleaned.slice(-10);
+          }
+
+          if (field) {
+            field.handleChange(cleaned);
+          } else {
+            form.setFieldValue('phone', cleaned as never);
+          }
+        }
+
+        // Auto-fill name if contact has name and form name is currently empty
+        const contactName = contact.name?.[0];
+        if (contactName) {
+          const currentName = form.getFieldValue('name');
+          if (!currentName || String(currentName).trim() === '') {
+            form.setFieldValue('name', contactName as never);
+          }
+        }
+
+        haptics.success();
+        notifySuccess('Contact loaded from phone');
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        // User cancelled contact picker dialog
+        return;
+      }
+      console.error('Contact picker error:', err);
+      notifyError('Failed to access contacts');
+    }
+  };
+
   return (
     <form
+      noValidate
       className="space-y-4"
       onSubmit={(e) => {
         e.preventDefault();
@@ -97,7 +202,7 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
     >
       <Field name="name">
         {(field) => (
-          <TextInput label="Name" field={field} placeholder="Enter name" />
+          <TextInput label="Name" field={field} placeholder="Enter name" autoComplete="name" />
         )}
       </Field>
 
@@ -116,7 +221,23 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
           <TextInput
             label="Phone Number"
             field={field}
-            placeholder="Phone Number"
+            placeholder="10-digit mobile number"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel-national"
+            headerAction={
+              hasContactPicker && (
+              <button
+                type="button"
+                onClick={() => handlePickContact(field)}
+                className="btn btn-sm btn-tinted h-7"
+                aria-label="Choose from phone contacts"
+              >
+                <MdOutlineContactPhone size={14} />
+                Contacts
+              </button>
+              )
+            }
           />
         )}
       </Field>
@@ -136,7 +257,7 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
             </Field>
 
             <Field name="employment.salary">
-              {(field) => <NumberInput label="Salary" field={field} />}
+              {(field) => <NumberInput label="Salary" field={field} prefix="₹" />}
             </Field>
           </div>
 
@@ -166,15 +287,16 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
       <button
         disabled={isPending || isSubmitting || !isValid}
         type="submit"
-        className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60"
+        onClick={() => haptics.medium()}
+        className="btn btn-lg btn-primary mt-2"
       >
         {mode === 'edit'
           ? isPending || isSubmitting
-            ? 'Updating...'
-            : 'Update'
+            ? 'Updating…'
+            : 'Update Profile'
           : isPending || isSubmitting
-            ? 'Saving...'
-            : 'Save'}
+            ? 'Saving…'
+            : 'Save Profile'}
       </button>
     </form>
   );

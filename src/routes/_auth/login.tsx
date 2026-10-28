@@ -3,11 +3,11 @@ import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { PasswordInput } from '../../components/form/PasswordInput';
 import { TextInput } from '../../components/form/TextInput';
-import { PageLayout } from '../../components/Layout';
 import { fetcher } from '../../lib/fetcher';
 import { notifyError } from '../../lib/toast';
 import type { LoginUser } from '../../shared/schemas/auth.schema';
 import { LoginUserSchema } from '../../shared/schemas/auth.schema';
+import { haptics } from '../../shared/utils/haptics';
 
 export const Route = createFileRoute('/_auth/login')({
   component: LoginPage
@@ -48,16 +48,22 @@ function LoginPage() {
   const { Field } = form;
 
   return (
-    <PageLayout title="">
-      <div className="flex items-center justify-center min-h-[calc(100vh-280px)]">
-        <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
-            Login
-          </h1>
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col justify-center pt-[env(safe-area-inset-top,0px)]">
+      <div className="mb-8 text-center animate-rise-in">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 text-xl font-bold text-white shadow-lg shadow-blue-500/30">
+          DB
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome back</h1>
+        <p className="mt-1 text-sm text-slate-500">Sign in to manage your store</p>
+      </div>
+
+      <div className="card p-5 animate-rise-in">
           <form
+            noValidate
             className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
+              haptics.medium();
               form.handleSubmit();
             }}
           >
@@ -66,7 +72,10 @@ function LoginPage() {
                 <TextInput
                   label="Phone"
                   field={field}
-                  placeholder="Enter your phone number"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="username"
+                  placeholder="10-digit mobile number"
                 />
               )}
             </Field>
@@ -82,19 +91,16 @@ function LoginPage() {
             </Field>
 
             {error && (
-              <p className="text-red-500 text-xs mt-1">{error?.message}</p>
+              <p role="alert" className="field-error">
+                {error.message}
+              </p>
             )}
 
-            <button
-              disabled={isPending}
-              type="submit"
-              className="w-full bg-blue-600 text-white mt-3 py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60 active:bg-blue-700"
-            >
-              {isPending ? 'Logging in...' : 'Login'}
+            <button disabled={isPending} type="submit" className="btn btn-lg btn-primary mt-2">
+              {isPending ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
-        </div>
       </div>
-    </PageLayout>
+    </div>
   );
 }

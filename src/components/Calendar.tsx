@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { fetcher } from '../lib/fetcher';
 import { notifyError, notifySuccess } from '../lib/toast';
+import type { AttendanceType } from '../shared/schemas/staff.schema';
+import { attendanceTheme } from '../shared/theme';
+import { haptics } from '../shared/utils/haptics';
 import { BottomSheet } from './BottomSheet';
 import { UpdateAttendance } from './UpdateAttendance';
-import type { AttendanceType } from '../shared/schemas/staff.schema';
 
 type Attendance = {
   accountId: string;
@@ -19,30 +21,27 @@ type Props = {
   employmentId: string | undefined;
 };
 
-const statusColors: Record<
-  AttendanceType,
-  { bg: string; text: string; label: string }
-> = {
-  PRESENT: { bg: 'bg-green-200', text: 'text-green-800', label: 'Present' },
-  ABSENT: { bg: 'bg-red-200', text: 'text-red-800', label: 'Absent' },
-  HALF: { bg: 'bg-yellow-200', text: 'text-yellow-800', label: 'Half Day' }
-};
+const STATUSES: AttendanceType[] = ['PRESENT', 'ABSENT', 'HALF'];
+const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const formatDateKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
     date.getDate()
   ).padStart(2, '0')}`;
 
+/** Monthly attendance grid. Tap a day to mark it; swipe sideways to change month. */
 export const Calendar = ({ accountId, employmentId }: Props) => {
   const today = new Date();
+  const todayKey = formatDateKey(today);
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(formatDateKey(today));
+  const [selectedDate, setSelectedDate] = useState(todayKey);
+  const swipeStartX = useRef<number | null>(null);
 
   const queryClient = useQueryClient();
 
-  const { data: attendance = [] } = useQuery({
+  const { data: attendance = [], isLoading } = useQuery({
     queryKey: ['calendar', accountId, currentMonth, currentYear],
     queryFn: () =>
       fetcher<Attendance[]>(
@@ -52,17 +51,19 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (data: Attendance) =>
-      fetcher('/staff/attendance', 'PATCH', data),
+    mutationFn: (data: Attendance) => fetcher('/staff/attendance', 'PATCH', data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['calendar', accountId, currentMonth, currentYear]
       });
+      queryClient.invalidateQueries({ queryKey: ['staffs'] });
       notifySuccess('Attendance updated');
+      haptics.success();
       setIsOpen(false);
     },
     onError: (error) => {
       notifyError(error.message);
+      haptics.error();
     }
   });
 
@@ -71,155 +72,157 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
       notifyError('Employment ID is required to update attendance');
       return;
     }
-    const payload: Attendance = {
-      employmentId,
-      accountId,
-      date: selectedDate,
-      status: newStatus
-    };
-    mutate(payload);
+    mutate({ employmentId, accountId, date: selectedDate, status: newStatus });
   };
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstWeekday = new Date(currentYear, currentMonth, 1).getDay();
+  const isCurrentMonth =
+    currentMonth === today.getMonth() && currentYear === today.getFullYear();
 
   const attendanceMap = useMemo(() => {
     const map: Record<string, AttendanceType> = {};
     attendance.forEach((item) => {
-      const d = new Date(item.date);
-      const key = formatDateKey(d);
-      map[key] = item.status;
+      map[formatDateKey(new Date(item.date))] = item.status;
     });
     return map;
   }, [attendance]);
 
   const counts = useMemo(() => {
-    const count: Record<AttendanceType, number> = {
-      PRESENT: 0,
-      ABSENT: 0,
-      HALF: 0
-    };
-    attendance.forEach((a) => {
-      count[a.status]++;
-    });
+    const count: Record<AttendanceType, number> = { PRESENT: 0, ABSENT: 0, HALF: 0 };
+    attendance.forEach((a) => count[a.status]++);
     return count;
   }, [attendance]);
 
-  const prevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear((y) => y - 1);
-    } else {
-      setCurrentMonth((m) => m - 1);
-    }
-  };
-
-  const nextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((y) => y + 1);
-    } else {
-      setCurrentMonth((m) => m + 1);
-    }
+  const shiftMonth = (delta: 1 | -1) => {
+    haptics.selection();
+    const next = new Date(currentYear, currentMonth + delta, 1);
+    setCurrentMonth(next.getMonth());
+    setCurrentYear(next.getFullYear());
   };
 
   const jumpToToday = () => {
+    haptics.selection();
     setCurrentMonth(today.getMonth());
     setCurrentYear(today.getFullYear());
-    setSelectedDate(formatDateKey(today));
+    setSelectedDate(todayKey);
   };
 
   const handleDateClick = (dateKey: string) => {
+    haptics.selection();
     setSelectedDate(dateKey);
     setIsOpen(true);
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        {/* Month navigation */}
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={prevMonth}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
-          >
-            <FiChevronLeft size={20} />
-          </button>
+    <div className="p-4">
+      {/* Month header */}
+      <div className="mb-3 flex items-center justify-between">
+        <button
+          onClick={() => shiftMonth(-1)}
+          type="button"
+          className="icon-btn"
+          aria-label="Previous month"
+        >
+          <FiChevronLeft size={20} />
+        </button>
 
-          <h3 className="text-lg font-semibold text-gray-800">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-bold tracking-tight text-slate-900">
             {new Date(currentYear, currentMonth).toLocaleString('default', {
               month: 'long',
               year: 'numeric'
             })}
           </h3>
-
-          <button
-            onClick={nextMonth}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
-          >
-            <FiChevronRight size={20} />
-          </button>
+          {!isCurrentMonth && (
+            <button onClick={jumpToToday} type="button" className="btn btn-sm btn-tinted h-7">
+              Today
+            </button>
+          )}
         </div>
 
-        {/* Today button */}
         <button
-          onClick={jumpToToday}
-          className="px-3 py-1 bg-blue-100 text-blue-700 font-medium rounded-full hover:bg-blue-200 transition-colors text-sm sm:text-base"
+          onClick={() => shiftMonth(1)}
+          type="button"
+          className="icon-btn"
+          aria-label="Next month"
         >
-          Today
+          <FiChevronRight size={20} />
         </button>
       </div>
 
-      <div className=" bg-gray-50 p-4 rounded-lg">
-        {/* Days of week */}
-        <div className="grid grid-cols-7 gap-4 text-center font-medium mb-4 text-gray-700 text-sm sm:text-base">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-            <div key={d}>{d}</div>
-          ))}
-        </div>
+      {/* Weekday labels */}
+      <div className="mb-1.5 grid grid-cols-7 text-center text-[11px] font-semibold text-slate-400">
+        {WEEKDAYS.map((d, i) => (
+          <div key={i}>{d}</div>
+        ))}
+      </div>
 
-        {/* Dates */}
-        <div className="grid grid-cols-7 gap-3.5 text-center">
-          {Array.from({ length: firstWeekday }).map((_, i) => (
-            <div key={`empty-${i}`} />
-          ))}
+      {/* Days */}
+      <div
+        className={`grid grid-cols-7 gap-1.5 transition-opacity ${isLoading ? 'opacity-50' : ''}`}
+        onTouchStart={(e) => (swipeStartX.current = e.touches[0]?.clientX ?? null)}
+        onTouchEnd={(e) => {
+          const start = swipeStartX.current;
+          const end = e.changedTouches[0]?.clientX;
+          swipeStartX.current = null;
+          if (start == null || end == null) return;
+          if (end - start > 60) shiftMonth(-1);
+          else if (start - end > 60) shiftMonth(1);
+        }}
+      >
+        {Array.from({ length: firstWeekday }).map((_, i) => (
+          <div key={`empty-${i}`} />
+        ))}
 
-          {Array.from({ length: daysInMonth }, (_, i) => {
-            const dateObj = new Date(currentYear, currentMonth, i + 1);
-            const isFuture = dateObj > today;
-            const dateKey = formatDateKey(dateObj);
-            const status = attendanceMap[dateKey];
+        {Array.from({ length: daysInMonth }, (_, i) => {
+          const dateObj = new Date(currentYear, currentMonth, i + 1);
+          const dateKey = formatDateKey(dateObj);
+          const isFuture = dateObj > today;
+          const isToday = dateKey === todayKey;
+          const status = attendanceMap[dateKey];
 
-            const isSelected = selectedDate === dateKey;
-            const bgColor = isFuture
-              ? 'bg-gray-200 opacity-50'
-              : status
-                ? statusColors[status].bg
-                : 'bg-gray-200';
-            const textColor = status
-              ? statusColors[status].text
-              : 'text-gray-800';
-            const selectedClass = isSelected ? 'ring-2 ring-blue-500' : '';
+          const tone = isFuture
+            ? 'text-slate-300'
+            : status
+              ? attendanceTheme[status].cell
+              : 'bg-slate-100 text-slate-700';
 
-            return (
-              <div
-                key={i}
-                onClick={() => !isFuture && handleDateClick(dateKey)}
-                className={`h-8 w-8 flex font-medium items-center justify-center rounded-full ${bgColor} ${textColor} ${selectedClass} text-sm sm:text-base`}
-              >
-                {i + 1}
-              </div>
-            );
-          })}
-        </div>
+          return (
+            <button
+              key={dateKey}
+              type="button"
+              disabled={isFuture}
+              onClick={() => handleDateClick(dateKey)}
+              aria-label={`${dateObj.toDateString()}${status ? `, ${attendanceTheme[status].label}` : ''}`}
+              className={`mx-auto flex aspect-square w-full max-w-11 items-center justify-center rounded-xl text-[13px] font-semibold tabular-nums transition active:scale-90 ${tone} ${
+                isToday ? 'ring-2 ring-blue-600 ring-offset-1' : ''
+              }`}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Legend with counts */}
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        {STATUSES.map((status) => (
+          <div
+            key={status}
+            className="flex flex-col items-center rounded-xl bg-slate-50 py-2 ring-1 ring-slate-100"
+          >
+            <span className="text-lg font-bold text-slate-900 tabular-nums">{counts[status]}</span>
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+              <span className={`h-2 w-2 rounded-full ${attendanceTheme[status].dot}`} />
+              {attendanceTheme[status].label}
+            </span>
+          </div>
+        ))}
       </div>
 
       {isOpen && selectedDate && (
-        <BottomSheet
-          title={`Update Attendance`}
-          onClose={() => setIsOpen(false)}
-        >
+        <BottomSheet title="Update Attendance" onClose={() => setIsOpen(false)}>
           <UpdateAttendance
             selectedDate={selectedDate}
             currentStatus={attendanceMap[selectedDate]}
@@ -228,20 +231,6 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
           />
         </BottomSheet>
       )}
-
-      {/* Attendance legend and counts */}
-      <div className="flex mt-4 items-center justify-around text-sm sm:text-base">
-        {(['PRESENT', 'ABSENT', 'HALF'] as AttendanceType[]).map((status) => (
-          <div key={status} className="flex items-center space-x-1">
-            <span
-              className={`h-4 w-4 rounded-full ${statusColors[status].bg}`}
-            />
-            <span className="text-gray-500 font-medium">
-              {statusColors[status].label}: {counts[status]}
-            </span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };

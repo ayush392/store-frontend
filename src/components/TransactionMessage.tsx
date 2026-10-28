@@ -9,9 +9,9 @@ type Props = {
 
 const getMessageColor = (type: TransactionType) => {
   if (type === 'UDHAAR' || type === 'ADVANCE') {
-    return 'border-red-100 bg-red-50 text-red-700';
+    return 'bg-rose-50 text-rose-700 ring-rose-100';
   }
-  return 'border-blue-100 bg-blue-50 text-blue-700';
+  return 'bg-blue-50 text-blue-700 ring-blue-100';
 };
 
 const getMessage = (type: TransactionType, amount: number, name: string) => {
@@ -39,7 +39,8 @@ export const TransactionMessage = ({ amount, type, name }: Props) => {
   }
   return (
     <div
-      className={`rounded-lg border px-3 py-2 font-medium ${getMessageColor(type)}`}
+      aria-live="polite"
+      className={`rounded-xl px-3.5 py-3 text-sm font-semibold ring-1 ${getMessageColor(type)}`}
     >
       {getMessage(type, amount, name)}
     </div>
