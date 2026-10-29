@@ -35,7 +35,7 @@ function StoresPage() {
     <div className="relative space-y-4">
       {/* store List */}
       <div className="bg-white rounded-lg shadow-sm">
-        <SectionHeader title="Stores" filterOptions={['All']} />
+        <SectionHeader title="Stores" />
         <SkeletonWrapper<Account[]>
           isLoading={isLoading}
           skeleton={<ListSkeleton showButton={true} />}

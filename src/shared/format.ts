@@ -20,13 +20,15 @@ export const formatDate = (dateString: string) => {
   });
 };
 
+// Money colors follow the balance effect in store-backend/src/shared/constant.ts.
+// Always show them with the sign (getAmountSymbol) and the type label.
 export const getAmountColor = (type: TransactionType) => {
   if (type === 'UDHAAR' || type === 'ADVANCE') {
-    return 'text-red-500';
+    return 'text-debit';
   } else if (type === 'PAYMENT') {
-    return 'text-blue-600';
+    return 'text-credit';
   }
-  return 'text-gray-600';
+  return 'text-fg-secondary';
 };
 
 export const getAmountSymbol = (amount: number) => {

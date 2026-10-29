@@ -51,7 +51,7 @@ function CustomerDetailsPage() {
       </SkeletonWrapper>
 
       <div className="bg-white rounded-lg shadow-sm">
-        <SectionHeader title="Transactions" filterOptions={['all']} />
+        <SectionHeader title="Transactions" />
         <SkeletonWrapper<Transactions[]>
           isLoading={isLoading}
           skeleton={<ListSkeleton />}

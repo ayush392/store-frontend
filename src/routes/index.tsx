@@ -69,10 +69,7 @@ function HomePage() {
       <WeeklyOverview />
 
       <div className="bg-white rounded-lg shadow-sm">
-        <SectionHeader
-          title="Recent Transactions"
-          filterOptions={['all', 'staff', 'customer', 'store']}
-        />
+        <SectionHeader title="Recent Transactions" />
 
         <SkeletonWrapper<RecentTrans[]>
           isLoading={isLoading}

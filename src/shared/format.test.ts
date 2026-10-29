@@ -41,17 +41,17 @@ describe('getAmountSymbol', () => {
 });
 
 describe('getAmountColor', () => {
-  it('marks UDHAAR and ADVANCE as debit', () => {
-    expect(getAmountColor('UDHAAR')).toBe('text-red-500');
-    expect(getAmountColor('ADVANCE')).toBe('text-red-500');
+  it('marks UDHAAR and ADVANCE as debit (they raise the balance)', () => {
+    expect(getAmountColor('UDHAAR')).toBe('text-debit');
+    expect(getAmountColor('ADVANCE')).toBe('text-debit');
   });
 
-  it('marks PAYMENT differently from debits', () => {
-    expect(getAmountColor('PAYMENT')).toBe('text-blue-600');
+  it('marks PAYMENT as credit (it lowers the balance)', () => {
+    expect(getAmountColor('PAYMENT')).toBe('text-credit');
   });
 
-  it('uses a neutral color for SALARY', () => {
-    expect(getAmountColor('SALARY')).toBe('text-gray-600');
+  it('uses a neutral color for SALARY (no effect on the balance)', () => {
+    expect(getAmountColor('SALARY')).toBe('text-fg-secondary');
   });
 });
 

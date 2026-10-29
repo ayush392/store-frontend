@@ -90,7 +90,7 @@ function StaffDetailsPage() {
 
         {activeTab === 'transactions' && (
           <div>
-            <SectionHeader title="Transactions" filterOptions={['all']} />
+            <SectionHeader title="Transactions" />
             <SkeletonWrapper<Transactions[]>
               isLoading={isLoading}
               skeleton={<ListSkeleton />}

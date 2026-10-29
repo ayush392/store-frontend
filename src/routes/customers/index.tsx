@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { FiDollarSign } from 'react-icons/fi';
+import { createFileRoute } from '@tanstack/react-router';
+import { AccountListItem } from '../../components/AccountListItem';
 import { SectionHeader } from '../../components/SectionHeader';
 import { fetcher } from '../../lib/fetcher';
-import { formatAmount } from '../../shared/format';
 import type { Account } from '../../shared/types';
 import { queryKeys } from '../../shared/queryKeys';
 import { ListSkeleton } from '../../components/placeholders/ListSkeleton';
@@ -32,62 +31,28 @@ function CustomersPage() {
   }
 
   return (
-    <div className="relative space-y-4">
-      {/* Customer List */}
-      <div className="bg-white rounded-lg shadow-sm">
-        <SectionHeader title="Customers" filterOptions={['All']} />
+    <div className="space-y-4">
+      <section className="overflow-hidden rounded-xl bg-surface shadow-sm">
+        <SectionHeader title="Customers" />
 
         <SkeletonWrapper<Account[]>
           isLoading={isLoading}
           skeleton={<ListSkeleton showButton={true} />}
           data={data}
-          message="No Customers found"
+          message="No customers yet"
         >
-          <div className="divide-y divide-gray-200">
+          <ul className="divide-y divide-line">
             {data?.map((customer) => (
-              <div key={`${customer._id}`} className="p-4 hover:bg-gray-50">
-                <div className="flex justify-between items-center">
-                  <Link
-                    to="/customers/$customerId"
-                    params={{ customerId: customer._id }}
-                    className="block flex-1 space-y-1"
-                  >
-                    <div className="font-semibold text-gray-800">
-                      {customer.name}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {customer.phone}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {customer.address}
-                    </div>
-                  </Link>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <div className="text-xs text-gray-500 mb-1">Due</div>
-                      <div
-                        className={`font-bold text-sm ${customer.currentOutstanding > 0 ? 'text-red-500' : 'text-gray-400'}`}
-                      >
-                        {formatAmount(customer.currentOutstanding)}
-                      </div>
-                    </div>
-                    <Link
-                      to="/customers/$customerId/transactions/new"
-                      params={{ customerId: customer._id }}
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm flex items-center space-x-1"
-                    >
-                      <FiDollarSign size={14} />
-                      <span>Pay</span>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+              <AccountListItem
+                key={customer._id}
+                // The list endpoint doesn't return accountType.
+                account={{ ...customer, accountType: 'CUSTOMER' }}
+              />
             ))}
-          </div>
+          </ul>
         </SkeletonWrapper>
-      </div>
+      </section>
 
-      {/* Floating Add Button */}
       <FloatingButton link="/customers/new" label="Customer" />
     </div>
   );
