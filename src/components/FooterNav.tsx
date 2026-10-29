@@ -2,7 +2,6 @@ import { Link } from '@tanstack/react-router';
 import {
   CustomerIcon,
   HomeIcon,
-  RecycleIcon,
   StaffIcon,
   StoreIcon
 } from '../shared/icons';
@@ -11,30 +10,32 @@ const navItems = [
   { path: '/', icon: HomeIcon, label: 'Home' },
   { path: '/staffs', icon: StaffIcon, label: 'Staff' },
   { path: '/customers', icon: CustomerIcon, label: 'Customer' },
-  { path: '/stores', icon: StoreIcon, label: 'Store' },
-  { path: '/recycle', icon: RecycleIcon, label: 'Recycle' }
-];
+  { path: '/stores', icon: StoreIcon, label: 'Store' }
+] as const;
+
+const itemClass =
+  'flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center rounded-lg px-1 py-1.5';
 
 export const FooterNav = () => {
   return (
-    <footer className="sticky bottom-0 z-30 bg-white border-t border-gray-200 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-      <nav className="flex justify-around">
+    <footer className="sticky bottom-0 z-30 border-t border-line bg-surface px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+      <nav aria-label="Main" className="flex justify-around gap-1">
         {navItems.map(({ path, icon: Icon, label }) => (
           <Link
             key={path}
             to={path}
             preload="intent"
+            // Home is "/", which would otherwise match every page.
+            activeOptions={{ exact: path === '/' }}
             activeProps={{
-              className:
-                'flex flex-col items-center py-2 px-1 rounded-lg min-w-0 flex-1 text-blue-600 bg-blue-50'
+              className: `${itemClass} bg-primary-soft text-primary`
             }}
             inactiveProps={{
-              className:
-                'flex flex-col items-center py-2 px-1 rounded-lg min-w-0 flex-1 text-gray-600'
+              className: `${itemClass} text-fg-secondary active:bg-surface-muted`
             }}
           >
-            <Icon size={20} />
-            <span className="text-xs mt-1 font-medium truncate">{label}</span>
+            <Icon size={22} aria-hidden="true" />
+            <span className="mt-1 truncate text-xs font-medium">{label}</span>
           </Link>
         ))}
       </nav>
