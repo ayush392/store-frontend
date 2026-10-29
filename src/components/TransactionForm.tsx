@@ -30,13 +30,16 @@ type Props = {
   accountId: string;
   accountType: AccountType;
   transaction?: Transactions;
+  // Called after the transaction is saved (the page navigates away).
+  onSaved: () => void;
 };
 
 export const TransactionForm = ({
   name,
   accountId,
   accountType,
-  transaction
+  transaction,
+  onSaved
 }: Props) => {
   const [bills, setBills] = useState<BillFile[]>([]);
   const queryClient = useQueryClient();
@@ -101,7 +104,9 @@ export const TransactionForm = ({
           } as UpdateTransaction);
         } catch {
           // The error toast is shown by onError; keep the entered values.
+          return;
         }
+        onSaved();
         return;
       }
 
@@ -122,9 +127,9 @@ export const TransactionForm = ({
         return;
       }
 
-      // Clear the form and bills only after the transaction was saved.
-      setBills([]);
-      formApi.reset();
+      // Leave the form only after the transaction was saved; on any failure
+      // above the entered values and bills stay.
+      onSaved();
     },
     validators: {
       onSubmit: transaction

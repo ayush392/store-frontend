@@ -1,5 +1,6 @@
 import { FiPlus, FiX } from 'react-icons/fi';
 import imageCompression from 'browser-image-compression';
+import { notifyError } from '../lib/toast';
 
 export type BillFile = {
   id: string;
@@ -15,24 +16,28 @@ type Props = {
 export const UploadBills = ({ bills, setBills }: Props) => {
   const addBills = async (files: FileList) => {
     const allowedFiles = Array.from(files);
-    const compressedBills = await Promise.all(
-      allowedFiles.map(async (file) => {
-        const compressedFile = await imageCompression(file, {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 2000,
-          initialQuality: 0.85,
-          useWebWorker: true
-        });
+    try {
+      const compressedBills = await Promise.all(
+        allowedFiles.map(async (file) => {
+          const compressedFile = await imageCompression(file, {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 2000,
+            initialQuality: 0.85,
+            useWebWorker: true
+          });
 
-        return {
-          id: crypto.randomUUID(),
-          file: compressedFile,
-          preview: URL.createObjectURL(compressedFile)
-        };
-      })
-    );
+          return {
+            id: crypto.randomUUID(),
+            file: compressedFile,
+            preview: URL.createObjectURL(compressedFile)
+          };
+        })
+      );
 
-    setBills((prev) => [...prev, ...compressedBills]);
+      setBills((prev) => [...prev, ...compressedBills]);
+    } catch {
+      notifyError("Couldn't add that photo. Please try another image.");
+    }
   };
 
   const removeBill = (id: string) => {
@@ -50,44 +55,49 @@ export const UploadBills = ({ bills, setBills }: Props) => {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-700">
+        <span className="block text-sm font-medium text-fg-secondary">
           Bills / Receipts
-        </label>
+        </span>
 
         {bills.length > 0 && (
-          <span className="text-xs text-gray-500">{bills.length} attached</span>
+          <span className="text-xs text-fg-muted">{bills.length} attached</span>
         )}
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-1">
-        {bills.map((bill) => (
+        {bills.map((bill, i) => (
           <div
             key={bill.id}
-            className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-gray-200"
+            className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-line"
           >
             <img
               src={bill.preview}
-              alt="Receipt"
+              alt={`Bill ${i + 1}`}
               className="h-full w-full object-cover"
             />
 
+            {/* 44px tap area in the corner; the visible circle is smaller. */}
             <button
               type="button"
               onClick={() => removeBill(bill.id)}
-              className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/90 backdrop-blur shadow-sm border border-gray-200 active:scale-95 transition"
+              aria-label={`Remove bill ${i + 1}`}
+              className="absolute right-0 top-0 flex h-11 w-11 items-start justify-end p-1.5"
             >
-              <FiX className="h-3.5 w-3.5 text-gray-800" />
+              <span className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface/90 shadow-sm">
+                <FiX className="h-4 w-4 text-fg" aria-hidden="true" />
+              </span>
             </button>
           </div>
         ))}
 
         {bills.length < 3 && (
-          <label className="flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
+          <label className="flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-line-strong bg-surface-muted text-fg-secondary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus active:bg-line">
             <input
               type="file"
               multiple
               accept="image/*"
-              className="hidden"
+              aria-label="Add bill photo"
+              className="sr-only"
               onChange={(e) => {
                 if (e.target.files?.length) {
                   addBills(e.target.files);
@@ -96,7 +106,7 @@ export const UploadBills = ({ bills, setBills }: Props) => {
               }}
             />
 
-            <FiPlus className="h-7 w-7 text-gray-500" />
+            <FiPlus className="h-7 w-7" aria-hidden="true" />
           </label>
         )}
       </div>
