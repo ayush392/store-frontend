@@ -3,6 +3,7 @@ import type { AccountType } from './schemas/account.schema';
 import type { AttendanceType, SalaryType } from './schemas/staff.schema';
 import type { TransactionType } from './schemas/transaction.schema';
 import type { ObjectId } from './schemas/common.schema';
+import type { UserRole } from './schemas/auth.schema';
 
 export interface FormInputProps {
   label: string;
@@ -11,6 +12,13 @@ export interface FormInputProps {
   error?: string;
   classNames?: string;
 }
+
+// GET /auth/me (the backend also sends isActive, which the app doesn't use).
+export type Me = {
+  name: string;
+  phone: string;
+  role: UserRole;
+};
 
 export type Account = {
   _id: string;
