@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { FiEdit3, FiTrash2 } from 'react-icons/fi';
+import { useId, useState } from 'react';
+import { FiChevronDown, FiEdit3, FiTrash2 } from 'react-icons/fi';
+import { Link } from '@tanstack/react-router';
 import {
   formatAmount,
   formatDate,
@@ -7,124 +8,136 @@ import {
   getAmountColor,
   getAmountSymbol
 } from '../shared/format';
+import { editTransactionLink } from '../shared/accountLinks';
+import type { AccountType } from '../shared/schemas/account.schema';
 import type { Transactions } from '../shared/types';
-import { Link } from '@tanstack/react-router';
+import { buttonClass } from './buttonClass';
+import { Button } from './Button';
 import { TransactionImageViewer } from './TransactionImageViewer';
 
 type Props = {
   transactions: Transactions[];
-  type: 'customers' | 'stores' | 'staffs';
+  accountType: AccountType;
 };
 
-export const TransactionList = ({ transactions, type }: Props) => {
+export const TransactionList = ({ transactions, accountType }: Props) => {
   const [expandedId, setExpandedId] = useState<string>('');
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev: string) => (prev === id ? '' : id));
   };
 
-  const getEditTransactionPageLink = (transaction: Transactions) => {
-    switch (type) {
-      case 'staffs':
-        return {
-          to: '/staffs/$staffId/transactions/$txId/edit',
-          params: { staffId: transaction.accountId, txId: transaction._id }
-        };
-      case 'customers':
-        return {
-          to: '/customers/$customerId/transactions/$txId/edit',
-          params: { customerId: transaction.accountId, txId: transaction._id }
-        };
-      case 'stores':
-        return {
-          to: '/stores/$storeId/transactions/$txId/edit',
-          params: { storeId: transaction.accountId, txId: transaction._id }
-        };
-    }
-  };
+  return (
+    <ul className="divide-y divide-line">
+      {transactions.map((transaction) => (
+        <TransactionRow
+          key={transaction._id}
+          transaction={transaction}
+          accountType={accountType}
+          isExpanded={expandedId === transaction._id}
+          onToggle={() => toggleExpand(transaction._id)}
+          onDelete={() => {
+            console.log('Delete', transaction._id);
+          }}
+        />
+      ))}
+    </ul>
+  );
+};
+
+type RowProps = {
+  transaction: Transactions;
+  accountType: AccountType;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onDelete: () => void;
+};
+
+const TransactionRow = ({
+  transaction,
+  accountType,
+  isExpanded,
+  onToggle,
+  onDelete
+}: RowProps) => {
+  const actionsId = useId();
+  const type = formatEnum(transaction.transactionType);
 
   return (
-    <div className="divide-y divide-gray-200">
-      {transactions.map((transaction) => {
-        const isExpanded = expandedId === transaction._id;
-
-        return (
-          <div
-            key={transaction._id}
-            className={`p-4 transition ${isExpanded ? 'bg-gray-50' : ''}`}
-          >
-            <div
-              className="flex items-center justify-between cursor-pointer"
-              onClick={() => toggleExpand(transaction._id)}
-            >
-              {/* Left */}
-              <div className="flex flex-col flex-1 gap-1 min-w-0 pr-3">
-                <div className="font-medium text-gray-800 truncate">
-                  {formatDate(transaction.date)}
-                </div>
-
-                <div
-                  className={`text-sm text-gray-500 ${
-                    isExpanded ? 'whitespace-normal' : 'truncate max-w-60'
-                  }`}
-                >
-                  {transaction.note}
-                </div>
-              </div>
-
-              {/* Right */}
-              <div className="text-right shrink-0 ml-2">
-                <div
-                  className={`font-semibold text-base ${getAmountColor(
-                    transaction.transactionType
-                  )}`}
-                >
-                  {getAmountSymbol(transaction.amountChange)}
-                  {formatAmount(transaction.amount)}
-                </div>
-
-                <div className="text-sm text-gray-500 capitalize">
-                  {formatEnum(transaction.transactionType)}
-                </div>
-              </div>
-            </div>
-
-            <TransactionImageViewer transaction={transaction} />
-
-            {/* Actions */}
-            <div
-              className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                isExpanded
-                  ? 'max-h-40 opacity-100 translate-y-0'
-                  : 'max-h-0 opacity-0 -translate-y-1'
+    <li className={isExpanded ? 'bg-surface-muted' : ''}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        aria-controls={actionsId}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-surface-muted"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-fg">{formatDate(transaction.date)}</p>
+          {transaction.note && (
+            <p
+              className={`text-sm text-fg-secondary ${
+                isExpanded ? 'whitespace-normal break-words' : 'truncate'
               }`}
             >
-              {isExpanded && (
-                <div className="mt-3 pt-3 border-t border-gray-200 flex justify-end gap-3">
-                  <Link
-                    {...getEditTransactionPageLink(transaction)}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-blue-50 text-blue-600 active:bg-blue-100"
-                  >
-                    <FiEdit3 size={14} />
-                    Edit
-                  </Link>
+              {transaction.note}
+            </p>
+          )}
+        </div>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Delete', transaction._id);
-                    }}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-red-50 text-red-600 active:bg-red-100"
-                  >
-                    <FiTrash2 size={14} />
-                    Delete
-                  </button>
-                </div>
+        <div className="shrink-0 text-right">
+          <p
+            className={`font-semibold tabular-nums ${getAmountColor(
+              transaction.transactionType
+            )}`}
+          >
+            {getAmountSymbol(transaction.amountChange)}
+            {formatAmount(transaction.amount)}
+          </p>
+          <p className="text-sm text-fg-secondary">{type}</p>
+        </div>
+
+        <FiChevronDown
+          size={18}
+          aria-hidden="true"
+          className={`shrink-0 text-fg-muted transition-transform ${
+            isExpanded ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+
+      {/* Bill thumbnails are buttons, so they sit outside the row button. */}
+      {transaction.images?.length ? (
+        <div className="px-4 pb-3 -mt-1">
+          <TransactionImageViewer transaction={transaction} />
+        </div>
+      ) : null}
+
+      <div id={actionsId} hidden={!isExpanded}>
+        {isExpanded && (
+          <div className="flex justify-end gap-3 px-4 pb-3">
+            <Link
+              {...editTransactionLink(
+                accountType,
+                transaction.accountId,
+                transaction._id
               )}
-            </div>
+              className={buttonClass({ variant: 'ghost', className: 'px-3' })}
+            >
+              <FiEdit3 size={16} aria-hidden="true" />
+              Edit
+            </Link>
+            <Button
+              variant="destructive"
+              className="px-3"
+              onClick={onDelete}
+            >
+              <FiTrash2 size={16} aria-hidden="true" />
+              Delete
+            </Button>
           </div>
-        );
-      })}
-    </div>
+        )}
+      </div>
+    </li>
   );
 };

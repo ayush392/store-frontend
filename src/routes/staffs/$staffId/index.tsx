@@ -100,7 +100,7 @@ function StaffDetailsPage() {
               {data && (
                 <TransactionList
                   transactions={data.transactions}
-                  type="staffs"
+                  accountType="STAFF"
                 />
               )}
             </SkeletonWrapper>

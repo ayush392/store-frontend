@@ -59,7 +59,7 @@ function StoreDetailsPage() {
           message="No transactions found"
         >
           {data && (
-            <TransactionList transactions={data.transactions} type="stores" />
+            <TransactionList transactions={data.transactions} accountType="STORE" />
           )}
         </SkeletonWrapper>
       </div>

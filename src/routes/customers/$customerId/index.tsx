@@ -50,22 +50,22 @@ function CustomerDetailsPage() {
         )}
       </SkeletonWrapper>
 
-      <div className="bg-white rounded-lg shadow-sm">
+      <section className="overflow-hidden rounded-xl bg-surface shadow-sm">
         <SectionHeader title="Transactions" />
         <SkeletonWrapper<Transactions[]>
           isLoading={isLoading}
           skeleton={<ListSkeleton />}
           data={data?.transactions}
-          message="No transactions found"
+          message="No transactions yet"
         >
           {data && (
             <TransactionList
               transactions={data.transactions}
-              type="customers"
+              accountType="CUSTOMER"
             />
           )}
         </SkeletonWrapper>
-      </div>
+      </section>
 
       <FloatingButton link={`./transactions/new`} label="Pay" />
     </PageLayout>

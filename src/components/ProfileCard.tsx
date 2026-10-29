@@ -1,7 +1,9 @@
-import { FiEdit3, FiUser } from 'react-icons/fi';
-import { formatAmount, formatDate } from '../shared/format';
-import type { Account, Employment } from '../shared/types';
+import { FiEdit3 } from 'react-icons/fi';
 import { Link } from '@tanstack/react-router';
+import { formatAmount, formatDate } from '../shared/format';
+import { accountEditLink } from '../shared/accountLinks';
+import { getBalanceDisplay } from '../shared/balance';
+import type { Account, Employment } from '../shared/types';
 
 type Props = {
   profile: Account;
@@ -9,96 +11,83 @@ type Props = {
 };
 
 export const ProfileCard = ({ profile, employment }: Props) => {
-  const getEditAccountPageLink = () => {
-    switch (profile.accountType) {
-      case 'STAFF':
-        return {
-          to: '/staffs/$staffId/edit',
-          params: { staffId: profile._id }
-        };
-      case 'CUSTOMER':
-        return {
-          to: '/customers/$customerId/edit',
-          params: { customerId: profile._id }
-        };
-      case 'STORE':
-        return {
-          to: '/stores/$storeId/edit',
-          params: { storeId: profile._id }
-        };
-    }
-  };
+  const balance = getBalanceDisplay(
+    profile.accountType,
+    profile.currentOutstanding
+  );
+  const job = employment?.[0];
+  const initial = profile.name.trim().charAt(0).toUpperCase();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3 min-w-0">
-          <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-            <FiUser size={20} className="text-gray-600" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-lg font-semibold text-gray-800 truncate">
-              {profile.name}
-            </h3>
-            <p className="text-sm text-gray-500 truncate">
+    <section className="rounded-xl bg-surface p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div
+          aria-hidden="true"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-soft text-lg font-semibold text-primary"
+        >
+          {initial}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-lg font-semibold text-fg">
+            {profile.name}
+          </h2>
+          {profile.displayName && (
+            <p className="truncate text-sm text-fg-secondary">
               {profile.displayName}
             </p>
-          </div>
+          )}
         </div>
-
-        <Link className="p-2 text-blue-600" {...getEditAccountPageLink()}>
-          <FiEdit3 size={18} />
+        <Link
+          {...accountEditLink(profile.accountType, profile._id)}
+          aria-label="Edit profile"
+          className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-primary active:bg-primary-soft"
+        >
+          <FiEdit3 size={20} aria-hidden="true" />
         </Link>
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-gray-700">
-        <div className="flex justify-between">
-          <span className="text-gray-500">Phone</span>
-          <span className="font-medium text-gray-800">{profile.phone}</span>
-        </div>
+      <div className="mt-4 rounded-lg bg-surface-muted px-4 py-3">
+        <p className="text-sm text-fg-secondary">{balance.label}</p>
+        <p
+          className={`text-2xl font-semibold tabular-nums ${balance.className}`}
+        >
+          {balance.amount}
+        </p>
+      </div>
 
-        <div className="flex justify-between">
-          <span className="text-gray-500">Address</span>
-          <span className="font-medium text-gray-800 text-right">
-            {profile.address}
-          </span>
-        </div>
-
-        {profile.notes && (
-          <div className="flex justify-between">
-            <span className="text-gray-500">Notes</span>
-            <span className="font-medium text-gray-800 text-right truncate">
-              {profile.notes}
-            </span>
-          </div>
-        )}
-
-        <div className="flex justify-between text-red-600 ">
-          <span className="">Outstanding</span>
-          <span className="font-medium">
-            {formatAmount(profile.currentOutstanding)}
-          </span>
-        </div>
-
-        {employment && employment[0] && (
+      <dl className="mt-2 divide-y divide-line text-sm">
+        <Row label="Phone">
+          <span className="tabular-nums">{profile.phone}</span>
+        </Row>
+        <Row label="Address">{profile.address}</Row>
+        {profile.notes && <Row label="Notes">{profile.notes}</Row>}
+        {job && (
           <>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Salary</span>
-              <span className="font-medium text-gray-800">
-                {formatAmount(employment[0].salary)}/
-                {employment[0].salaryType === 'DAILY' ? 'day' : 'month'}
+            <Row label="Salary">
+              <span className="tabular-nums">
+                {formatAmount(job.salary)}/
+                {job.salaryType === 'DAILY' ? 'day' : 'month'}
               </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-500">Joining Date</span>
-              <span className="font-medium text-gray-800">
-                {formatDate(employment[0].joinDate)}
-              </span>
-            </div>
+            </Row>
+            <Row label="Joining date">{formatDate(job.joinDate)}</Row>
           </>
         )}
-      </div>
-    </div>
+      </dl>
+    </section>
   );
 };
+
+const Row = ({
+  label,
+  children
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => (
+  <div className="flex justify-between gap-4 py-2.5">
+    <dt className="shrink-0 text-fg-secondary">{label}</dt>
+    <dd className="min-w-0 text-right font-medium break-words text-fg">
+      {children}
+    </dd>
+  </div>
+);
