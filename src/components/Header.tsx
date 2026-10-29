@@ -3,7 +3,7 @@ import { FiBell, FiUser } from 'react-icons/fi';
 
 export const Header = () => {
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between">
       <Link to="/" className="flex items-center space-x-2">
         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
           <span className="text-white font-bold text-sm">DB</span>
