@@ -13,7 +13,7 @@ export const PageLayout = ({ title, children, description }: Props) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <button
           onClick={() => {
             if (window.history.length > 1) {
@@ -22,17 +22,18 @@ export const PageLayout = ({ title, children, description }: Props) => {
               router.navigate({ to: '/' });
             }
           }}
-          className="p-2 text-gray-600 rounded-lg hover:bg-gray-100"
+          aria-label="Back"
+          className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-fg-secondary active:bg-surface-muted"
           type="button"
         >
-          <FiArrowLeft size={20} />
+          <FiArrowLeft size={22} aria-hidden="true" />
         </button>
 
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold text-fg">{title}</h1>
 
           {description && (
-            <p className="text-xs text-gray-500">{description}</p>
+            <p className="text-sm text-fg-secondary">{description}</p>
           )}
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { FiX } from 'react-icons/fi';
 
 type Props = {
@@ -10,32 +10,52 @@ type Props = {
 export function BottomSheet({ title, children, onClose }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const titleId = useId();
+  const [visible, setVisible] = useState(false);
 
   const startY = useRef(0);
   const currentY = useRef(0);
   const dragging = useRef(false);
+  const closing = useRef(false);
 
   const lastMoveTime = useRef(0);
   const lastY = useRef(0);
 
-  // Lock background scroll
+  // Lock background scroll and trigger the slide-in transition.
   useEffect(() => {
     const original = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    setTimeout(() => setMounted(true), 0); // trigger CSS transition on mount
+    const timer = setTimeout(() => setVisible(true), 0);
     return () => {
+      clearTimeout(timer);
       document.body.style.overflow = original;
     };
   }, []);
 
-  const closeSheet = () => {
-    if (!sheetRef.current) return;
+  // Move focus into the sheet and give it back to the opener on close.
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    sheetRef.current?.focus({ preventScroll: true });
+    return () => {
+      if (opener && document.contains(opener)) opener.focus();
+    };
+  }, []);
 
-    sheetRef.current.classList.add('translate-y-full');
-    sheetRef.current.classList.remove('translate-y-0');
-    setTimeout(onClose, 200); // wait for animation
-  };
+  const closeSheet = useCallback(() => {
+    if (closing.current) return;
+    closing.current = true;
+    if (sheetRef.current) sheetRef.current.style.transform = '';
+    setVisible(false);
+    setTimeout(onClose, 200); // wait for the slide-out animation
+  }, [onClose]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeSheet();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [closeSheet]);
 
   const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (!e.touches[0]) return;
@@ -79,35 +99,49 @@ export function BottomSheet({ title, children, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end bg-black/50 pb-18"
+      className="fixed inset-0 z-50 flex items-end bg-black/50"
       onClick={closeSheet}
     >
       <div
         ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className={`bg-white w-full max-h-dvh rounded-t-2xl shadow-xl flex flex-col transition-transform duration-150 ease-out ${
-          mounted ? 'translate-y-0' : 'translate-y-full'
+        className={`flex max-h-[85dvh] w-full flex-col rounded-t-2xl bg-surface shadow-lg outline-none transition-transform duration-150 ease-out ${
+          visible ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
         {/* Drag handle */}
-        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-2" />
+        <div
+          aria-hidden="true"
+          className="mx-auto my-2 h-1.5 w-12 rounded-full bg-line-strong/40"
+        />
 
         {/* Header */}
-        <div className="px-4 pb-3 border-b border-gray-400 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+        <div className="flex items-center justify-between border-b border-line pl-4 pr-2 pb-1">
+          <h2 id={titleId} className="text-lg font-semibold text-fg">
+            {title}
+          </h2>
           <button
+            type="button"
             onClick={closeSheet}
-            className="text-gray-400 hover:text-gray-600"
+            aria-label="Close"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary active:bg-surface-muted"
           >
-            <FiX size={20} />
+            <FiX size={22} aria-hidden="true" />
           </button>
         </div>
 
         {/* Content */}
-        <div ref={contentRef} className="flex-1 overflow-y-auto px-4 py-4 pb-4">
+        <div
+          ref={contentRef}
+          className="flex-1 overflow-y-auto px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+        >
           {children}
         </div>
       </div>
