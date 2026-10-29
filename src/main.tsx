@@ -32,7 +32,21 @@ if (!rootElement.innerHTML) {
   root.render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <Toaster />
+        <Toaster
+          toastOptions={{
+            style: {
+              background: 'var(--surface)',
+              color: 'var(--fg)',
+              border: '1px solid var(--line)'
+            },
+            success: {
+              iconTheme: { primary: 'var(--success)', secondary: 'var(--surface)' }
+            },
+            error: {
+              iconTheme: { primary: 'var(--error)', secondary: 'var(--surface)' }
+            }
+          }}
+        />
         <RouterProvider router={router} />
       </QueryClientProvider>
     </React.StrictMode>

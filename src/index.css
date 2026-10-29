@@ -1,1 +1,160 @@
 @import 'tailwindcss';
+
+/* Dark variant follows the data-theme attribute set by the script in index.html. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * Semantic color tokens (indigo + slate). Light values on :root, dark values on
+ * [data-theme='dark']. Components use the generated utilities (bg-surface,
+ * text-fg-secondary, text-debit, border-line-strong, ...), not palette colors.
+ *
+ * Contrast (WCAG 2.x) was checked for every text/background pair in both
+ * themes: text >= 4.5:1, control borders and focus >= 3:1.
+ * Exception: fg-muted is only for text on surface / surface-muted
+ * (4.34:1 on the light page background).
+ *
+ * Money colors: credit = PAYMENT (money in, lowers the balance),
+ * debit = UDHAAR / ADVANCE (raises the balance), outstanding = balance due.
+ * Never rely on these colors alone; always show the sign and the type label.
+ */
+:root {
+  --page: #f1f5f9; /* slate-100 */
+  --surface: #ffffff;
+  --surface-muted: #f8fafc; /* slate-50 */
+  --fg: #0f172a; /* slate-900 */
+  --fg-secondary: #475569; /* slate-600 */
+  --fg-muted: #64748b; /* slate-500 */
+  --line: #e2e8f0; /* slate-200, decorative dividers */
+  --line-strong: #64748b; /* slate-500, input and secondary-button borders */
+
+  --primary: #4f46e5; /* indigo-600 */
+  --primary-pressed: #4338ca; /* indigo-700 */
+  --primary-soft: #eef2ff; /* indigo-50 */
+  --on-primary: #ffffff;
+
+  --danger: #dc2626; /* red-600, destructive actions */
+  --danger-pressed: #b91c1c; /* red-700 */
+  --on-danger: #ffffff;
+
+  --credit: #047857; /* emerald-700 */
+  --credit-soft: #ecfdf5; /* emerald-50 */
+  --debit: #be123c; /* rose-700 */
+  --debit-soft: #fff1f2; /* rose-50 */
+  --outstanding: #be123c; /* rose-700 */
+  --payment: #047857; /* emerald-700, confirmed payment */
+  --on-payment: #ffffff;
+
+  --success: #047857; /* emerald-700 */
+  --success-soft: #d1fae5; /* emerald-100 */
+  --success-soft-fg: #065f46; /* emerald-800 */
+  --warning: #b45309; /* amber-700 */
+  --warning-soft: #fef3c7; /* amber-100 */
+  --warning-soft-fg: #92400e; /* amber-800 */
+  --error: #b91c1c; /* red-700 */
+  --error-soft: #fee2e2; /* red-100 */
+  --error-soft-fg: #991b1b; /* red-800 */
+
+  --focus: #6366f1; /* indigo-500 */
+}
+
+[data-theme='dark'] {
+  --page: #020617; /* slate-950 */
+  --surface: #0f172a; /* slate-900 */
+  --surface-muted: #1e293b; /* slate-800 */
+  --fg: #f8fafc; /* slate-50 */
+  --fg-secondary: #cbd5e1; /* slate-300 */
+  --fg-muted: #94a3b8; /* slate-400 */
+  --line: #1e293b; /* slate-800 */
+  --line-strong: #64748b; /* slate-500 */
+
+  --primary: #818cf8; /* indigo-400 */
+  --primary-pressed: #a5b4fc; /* indigo-300 */
+  --primary-soft: #1e1b4b; /* indigo-950 */
+  --on-primary: #1e1b4b; /* indigo-950 */
+
+  --danger: #f87171; /* red-400 */
+  --danger-pressed: #fca5a5; /* red-300 */
+  --on-danger: #450a0a; /* red-950 */
+
+  --credit: #34d399; /* emerald-400 */
+  --credit-soft: #022c22; /* emerald-950 */
+  --debit: #fb7185; /* rose-400 */
+  --debit-soft: #4c0519; /* rose-950 */
+  --outstanding: #fb7185; /* rose-400 */
+  --payment: #10b981; /* emerald-500 */
+  --on-payment: #020617; /* slate-950 */
+
+  --success: #34d399; /* emerald-400 */
+  --success-soft: #064e3b; /* emerald-900 */
+  --success-soft-fg: #a7f3d0; /* emerald-200 */
+  --warning: #fbbf24; /* amber-400 */
+  --warning-soft: #78350f; /* amber-900 */
+  --warning-soft-fg: #fde68a; /* amber-200 */
+  --error: #f87171; /* red-400 */
+  --error-soft: #7f1d1d; /* red-900 */
+  --error-soft-fg: #fecaca; /* red-200 */
+
+  --focus: #a5b4fc; /* indigo-300 */
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-fg: var(--fg);
+  --color-fg-secondary: var(--fg-secondary);
+  --color-fg-muted: var(--fg-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-primary: var(--primary);
+  --color-primary-pressed: var(--primary-pressed);
+  --color-primary-soft: var(--primary-soft);
+  --color-on-primary: var(--on-primary);
+
+  --color-danger: var(--danger);
+  --color-danger-pressed: var(--danger-pressed);
+  --color-on-danger: var(--on-danger);
+
+  --color-credit: var(--credit);
+  --color-credit-soft: var(--credit-soft);
+  --color-debit: var(--debit);
+  --color-debit-soft: var(--debit-soft);
+  --color-outstanding: var(--outstanding);
+  --color-payment: var(--payment);
+  --color-on-payment: var(--on-payment);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-fg: var(--success-soft-fg);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-fg: var(--warning-soft-fg);
+  --color-error: var(--error);
+  --color-error-soft: var(--error-soft);
+  --color-error-soft-fg: var(--error-soft-fg);
+
+  --color-focus: var(--focus);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    accent-color: var(--primary); /* native checkboxes, radios, date pickers */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  [data-theme='dark'] {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--page);
+    color: var(--fg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}

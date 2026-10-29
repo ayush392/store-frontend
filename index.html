@@ -11,6 +11,24 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>Dukaan Book</title>
+  <script>
+    // Apply the theme before the app loads to avoid a flash of the wrong theme.
+    // Same rules as src/shared/theme.ts; keep them in sync.
+    // Developer-only for now: dark applies only when localStorage.theme is
+    // set to 'dark' by hand. System/light/dark selection ships after every
+    // screen is migrated.
+    (function () {
+      var theme = 'light';
+      try {
+        if (localStorage.getItem('theme') === 'dark') theme = 'dark';
+      } catch (e) {}
+      var root = document.documentElement;
+      root.setAttribute('data-theme', theme);
+      root.style.colorScheme = theme;
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', theme === 'dark' ? '#0f172a' : '#ffffff');
+    })();
+  </script>
 </head>
 
 <body>
