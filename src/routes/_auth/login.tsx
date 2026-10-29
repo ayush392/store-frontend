@@ -67,6 +67,9 @@ function LoginPage() {
                   label="Phone"
                   field={field}
                   placeholder="Enter your phone number"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="username"
                 />
               )}
             </Field>
@@ -82,7 +85,9 @@ function LoginPage() {
             </Field>
 
             {error && (
-              <p className="text-red-500 text-xs mt-1">{error?.message}</p>
+              <p role="alert" className="mt-1 text-sm text-error">
+                {error?.message}
+              </p>
             )}
 
             <button

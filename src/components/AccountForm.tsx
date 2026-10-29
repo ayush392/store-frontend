@@ -117,6 +117,9 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
             label="Phone Number"
             field={field}
             placeholder="Phone Number"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="off"
           />
         )}
       </Field>

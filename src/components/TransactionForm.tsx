@@ -251,22 +251,22 @@ function ExistingBills({
 
   let content;
   if (isFetching) {
-    content = <p className="text-sm text-gray-500">Loading bills...</p>;
+    content = <p className="text-sm text-fg-muted">Loading bills...</p>;
   } else if (!match) {
-    content = <p className="text-sm text-gray-500">Existing bills are kept.</p>;
+    content = <p className="text-sm text-fg-muted">Existing bills are kept.</p>;
   } else if (!match.images?.length) {
-    content = <p className="text-sm text-gray-500">No bills attached.</p>;
+    content = <p className="text-sm text-fg-muted">No bills attached.</p>;
   } else {
     content = <TransactionImageViewer transaction={match} />;
   }
 
   return (
     <div className="space-y-1">
-      <div className="block text-sm font-medium text-gray-700">
+      <div className="block text-sm font-medium text-fg-secondary">
         Bills / Receipts
       </div>
       {content}
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-fg-muted">
         Bills can't be changed when editing a transaction.
       </p>
     </div>

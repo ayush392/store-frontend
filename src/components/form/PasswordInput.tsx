@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import type { FormInputProps } from '../../shared/types';
+import { FormField } from './FormField';
 
 interface PasswordInputProps extends FormInputProps {
   placeholder: string;
@@ -14,39 +15,33 @@ export const PasswordInput = ({
   error
 }: PasswordInputProps) => {
   const [show, setShow] = useState(false);
-  const { isTouched, errors } = field.state.meta;
-  const resolvedValue = String(field.state.value ?? '');
-  const resolvedError =
-    error ?? (isTouched && errors.length > 0 ? errors[0]?.message : '');
 
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          type={show ? 'text' : 'password'}
-          value={resolvedValue}
-          onChange={(e) => field.handleChange(e.target.value)}
-          onBlur={field.handleBlur}
-          disabled={disabled}
-          placeholder={placeholder}
-          className={`w-full border px-3 py-2 rounded-lg text-sm ${
-            disabled ? 'bg-gray-100' : 'border-gray-300'
-          } ${resolvedError ? 'border-red-500' : ''}`}
-        />
-        <button
-          type="button"
-          onClick={() => setShow(!show)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-        >
-          {show ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-        </button>
-      </div>
-      {resolvedError && (
-        <p className="text-red-500 text-xs mt-1">{resolvedError}</p>
+    <FormField label={label} field={field} error={error}>
+      {(control) => (
+        <div className="relative">
+          <input
+            {...control}
+            className={`${control.className} h-11 pr-11`}
+            type={show ? 'text' : 'password'}
+            autoComplete="current-password"
+            value={String(field.state.value ?? '')}
+            onChange={(e) => field.handleChange(e.target.value)}
+            onBlur={field.handleBlur}
+            disabled={disabled}
+            placeholder={placeholder}
+          />
+          <button
+            type="button"
+            onClick={() => setShow(!show)}
+            aria-label={show ? 'Hide password' : 'Show password'}
+            aria-pressed={show}
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-fg-secondary active:text-fg"
+          >
+            {show ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+          </button>
+        </div>
       )}
-    </div>
+    </FormField>
   );
 };

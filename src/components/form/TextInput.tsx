@@ -1,7 +1,11 @@
 import type { FormInputProps } from '../../shared/types';
+import { FormField } from './FormField';
 
 interface TextInputProps extends FormInputProps {
   placeholder: string;
+  type?: 'text' | 'tel';
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  autoComplete?: string;
 }
 
 export const TextInput = ({
@@ -9,33 +13,28 @@ export const TextInput = ({
   field,
   placeholder,
   disabled = false,
-  error
+  error,
+  type = 'text',
+  inputMode,
+  autoComplete
 }: TextInputProps) => {
-  const { isTouched, errors } = field.state.meta;
-  const resolvedValue = String(field.state.value ?? '');
-  const resolvedError =
-    error ?? (isTouched && errors.length > 0 ? errors[0]?.message : '');
-
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <input
-        type="text"
-        value={resolvedValue}
-        onChange={(e) => field.handleChange(e.target.value)}
-        onBlur={field.handleBlur}
-        disabled={disabled}
-        placeholder={placeholder}
-        className={`w-full border px-3 py-2 rounded-lg text-sm ${
-          disabled ? 'bg-gray-100' : 'border-gray-300'
-        } ${resolvedError ? 'border-red-500' : ''}`}
-      />
-      {resolvedError && (
-        <p className="text-red-500 text-xs mt-1">{resolvedError}</p>
+    <FormField label={label} field={field} error={error}>
+      {(control) => (
+        <input
+          {...control}
+          className={`${control.className} h-11`}
+          type={type}
+          inputMode={inputMode}
+          autoComplete={autoComplete}
+          value={String(field.state.value ?? '')}
+          onChange={(e) => field.handleChange(e.target.value)}
+          onBlur={field.handleBlur}
+          disabled={disabled}
+          placeholder={placeholder}
+        />
       )}
-    </div>
+    </FormField>
   );
 };
 
