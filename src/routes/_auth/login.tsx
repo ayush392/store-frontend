@@ -1,6 +1,7 @@
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Button } from '../../components/Button';
 import { PasswordInput } from '../../components/form/PasswordInput';
 import { TextInput } from '../../components/form/TextInput';
 import { PageLayout } from '../../components/Layout';
@@ -90,13 +91,14 @@ function LoginPage() {
               </p>
             )}
 
-            <button
-              disabled={isPending}
+            <Button
               type="submit"
-              className="w-full bg-blue-600 text-white mt-3 py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60 active:bg-blue-700"
+              fullWidth
+              className="mt-3"
+              disabled={isPending}
             >
               {isPending ? 'Logging in...' : 'Login'}
-            </button>
+            </Button>
           </form>
         </div>
       </div>

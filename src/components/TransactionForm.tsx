@@ -23,6 +23,7 @@ import { cloudinarySignedUpload } from '../shared/utils/cloudinary';
 import { queryKeys, transactionAffectedKeys } from '../shared/queryKeys';
 import { getChangedFields } from '../shared/changedFields';
 import { TransactionImageViewer } from './TransactionImageViewer';
+import { Button } from './Button';
 
 type Props = {
   name: string;
@@ -205,10 +206,10 @@ export const TransactionForm = ({
         </Field>
       )}
 
-      <button
-        disabled={isPending || isSubmitting || !isValid}
+      <Button
         type="submit"
-        className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60 active:bg-green-700"
+        fullWidth
+        disabled={isPending || isSubmitting || !isValid}
       >
         {transaction
           ? isPending || isSubmitting
@@ -217,7 +218,7 @@ export const TransactionForm = ({
           : isPending || isSubmitting
             ? 'Saving...'
             : 'Save'}
-      </button>
+      </Button>
     </form>
   );
 };

@@ -2,6 +2,7 @@ import { useState, type JSX } from 'react';
 import { FiCheckCircle, FiClock, FiXCircle } from 'react-icons/fi';
 import { formatDate } from '../shared/format';
 import type { AttendanceType } from '../shared/schemas/staff.schema';
+import { Button } from './Button';
 
 const statusColors: Record<
   AttendanceType,
@@ -63,17 +64,17 @@ export function UpdateAttendance({
         })}
       </div>
 
-      <button
+      <Button
+        fullWidth
         onClick={() => status && onSave(status)}
-        disabled={currentStatus === status || isLoading}
-        className={`w-full py-3 rounded-lg font-semibold transition-colors bg-blue-600 text-white active:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed`}
+        disabled={!status || currentStatus === status || isLoading}
       >
         {isLoading
           ? 'Saving...'
           : status
             ? 'Mark as ' + statusColors[status].label
             : 'Save'}
-      </button>
+      </Button>
     </div>
   );
 }

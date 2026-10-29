@@ -13,6 +13,7 @@ import type { AccountType } from '../shared/schemas/account.schema';
 import type { Account } from '../shared/types';
 import { accountAffectedKeys } from '../shared/queryKeys';
 import { getChangedFields } from '../shared/changedFields';
+import { Button } from './Button';
 
 type Props = {
   mode: 'create' | 'edit';
@@ -166,10 +167,10 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
         )}
       </Field>
 
-      <button
-        disabled={isPending || isSubmitting || !isValid}
+      <Button
         type="submit"
-        className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60"
+        fullWidth
+        disabled={isPending || isSubmitting || !isValid}
       >
         {mode === 'edit'
           ? isPending || isSubmitting
@@ -178,7 +179,7 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
           : isPending || isSubmitting
             ? 'Saving...'
             : 'Save'}
-      </button>
+      </Button>
     </form>
   );
 };
