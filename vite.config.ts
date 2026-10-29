@@ -19,13 +19,20 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
         navigateFallback: '/index.html'
       },
-      includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
+      includeAssets: [
+        'favicon.svg',
+        'apple-touch-icon.png',
+        'icons/icon-192.png',
+        'icons/icon-512.png'
+      ],
       manifest: {
         name: 'Dukaan Book',
         short_name: 'Dukaan',
         description: 'Dukaan Book application',
-        theme_color: '#2563eb',
-        background_color: '#2563eb',
+        // Light theme values: header surface and page background. The manifest
+        // supports a single value, so the splash screen can't follow dark mode.
+        theme_color: '#ffffff',
+        background_color: '#f1f5f9',
         display: 'standalone',
         start_url: '/',
         id: '/',

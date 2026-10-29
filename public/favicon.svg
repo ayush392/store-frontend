@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Dukaan Book">
+  <rect width="512" height="512" rx="112" fill="#4f46e5"/>
+  <g fill="none" stroke="#ffffff" stroke-width="36" stroke-linejoin="round">
+    <path d="M124 181H164A75 75 0 0 1 164 331H124Z"/>
+    <path d="M299 181H351A37.5 37.5 0 0 1 351 256A37.5 37.5 0 0 1 351 331H299ZM299 256H351"/>
+  </g>
+</svg>
