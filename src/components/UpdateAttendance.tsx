@@ -2,10 +2,7 @@ import { useState, type JSX } from 'react';
 import { FiCheckCircle, FiClock, FiXCircle } from 'react-icons/fi';
 import { formatDate } from '../shared/format';
 import type { AttendanceType } from '../shared/schemas/staff.schema';
-import {
-  attendanceStatus,
-  unmarkedAttendanceClassName
-} from '../shared/attendance';
+import { attendanceStatus } from '../shared/attendance';
 import { Button } from './Button';
 
 type UpdateAttendanceProps = {
@@ -48,10 +45,10 @@ export function UpdateAttendance({
               type="button"
               aria-pressed={isSelected}
               onClick={() => setStatus(type)}
-              className={`flex flex-col items-center justify-center p-4 rounded-xl font-semibold transition-transform active:scale-95 ${
+              className={`flex flex-col items-center justify-center p-4 rounded-xl border font-semibold transition-transform active:scale-95 ${
                 isSelected
-                  ? `${className} ring-2 ring-inset ring-current`
-                  : unmarkedAttendanceClassName
+                  ? `${className} border-transparent ring-2 ring-inset ring-current`
+                  : 'border-line-strong bg-surface text-fg'
               }`}
             >
               <div className="mb-1">{icon}</div>
