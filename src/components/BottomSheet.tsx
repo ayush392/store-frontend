@@ -5,9 +5,17 @@ type Props = {
   title: string;
   children: React.ReactNode;
   onClose: () => void;
+  // false while the sheet is busy (e.g. a request is running): the backdrop,
+  // Escape, swipe and close button are ignored.
+  dismissible?: boolean;
 };
 
-export function BottomSheet({ title, children, onClose }: Props) {
+export function BottomSheet({
+  title,
+  children,
+  onClose,
+  dismissible = true
+}: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -42,12 +50,12 @@ export function BottomSheet({ title, children, onClose }: Props) {
   }, []);
 
   const closeSheet = useCallback(() => {
-    if (closing.current) return;
+    if (closing.current || !dismissible) return;
     closing.current = true;
     if (sheetRef.current) sheetRef.current.style.transform = '';
     setVisible(false);
     setTimeout(onClose, 200); // wait for the slide-out animation
-  }, [onClose]);
+  }, [onClose, dismissible]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -58,7 +66,7 @@ export function BottomSheet({ title, children, onClose }: Props) {
   }, [closeSheet]);
 
   const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!e.touches[0]) return;
+    if (!e.touches[0] || !dismissible) return;
     dragging.current = true;
     startY.current = e.touches[0].clientY;
   };
@@ -130,8 +138,9 @@ export function BottomSheet({ title, children, onClose }: Props) {
           <button
             type="button"
             onClick={closeSheet}
+            disabled={!dismissible}
             aria-label="Close"
-            className="flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary active:bg-surface-muted"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary active:bg-surface-muted disabled:opacity-40"
           >
             <FiX size={22} aria-hidden="true" />
           </button>

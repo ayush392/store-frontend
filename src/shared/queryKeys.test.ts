@@ -45,6 +45,22 @@ describe('transactionAffectedKeys', () => {
       ['graph']
     ]);
   });
+
+  // Creating, editing or deleting a transaction changes the balance shown on
+  // the account's own detail page and list, so both must be refreshed for the
+  // right account type (e.g. a staff delete refreshes ['staffs'], not
+  // ['customers']).
+  it.each([
+    ['CUSTOMER', ['customer', 'x'], ['customers']],
+    ['STORE', ['store', 'x'], ['stores']],
+    ['STAFF', ['staff', 'x'], ['staffs']]
+  ] as const)('refreshes the %s detail and list', (type, detail, list) => {
+    const keys = transactionAffectedKeys(type, 'x');
+    expect(keys).toContainEqual(detail);
+    expect(keys).toContainEqual(list);
+    expect(keys).toContainEqual(['recent']);
+    expect(keys).toContainEqual(['graph']);
+  });
 });
 
 // Regression: AccountForm invalidated ['Customer'] while the list used
