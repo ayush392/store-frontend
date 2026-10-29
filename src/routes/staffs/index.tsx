@@ -6,6 +6,7 @@ import { fetcher } from '../../lib/fetcher';
 import { notifyError, notifySuccess } from '../../lib/toast';
 import { formatAmount, formatEnum } from '../../shared/format';
 import type { Staff } from '../../shared/types';
+import { queryKeys } from '../../shared/queryKeys';
 import type {
   AttendanceType,
   BulkAttendance
@@ -21,7 +22,7 @@ export const Route = createFileRoute('/staffs/')({
 function StaffsPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
-    queryKey: ['staffs'],
+    queryKey: queryKeys.accountList('STAFF'),
     queryFn: () => fetcher<Staff[]>('/staff')
   });
 
@@ -29,7 +30,9 @@ function StaffsPage() {
     mutationFn: (data: BulkAttendance) =>
       fetcher('/staff/attendance/bulk', 'PATCH', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['staffs'] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.accountList('STAFF')
+      });
       notifySuccess('Attendance updated');
       setSelectedStaffs(new Set());
     },

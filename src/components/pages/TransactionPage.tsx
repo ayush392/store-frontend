@@ -4,6 +4,7 @@ import type { Account, Transactions } from '../../shared/types';
 import { PageLayout } from '../Layout';
 import { TransactionForm } from '../TransactionForm';
 import type { ObjectId } from '../../shared/schemas/common.schema';
+import { queryKeys } from '../../shared/queryKeys';
 
 type Props = {
   mode: 'create' | 'edit';
@@ -15,7 +16,7 @@ export function TransactionPage({ mode, accountId, transactionId }: Props) {
   const title = mode === 'edit' ? 'Edit Transaction' : 'Create Transaction';
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['account', accountId, 'basic'],
+    queryKey: queryKeys.accountBasic(accountId),
     queryFn: () => fetcher<Account>(`/account/${accountId}/basic`),
     staleTime: 60 * 60 * 1000
   });
@@ -25,7 +26,7 @@ export function TransactionPage({ mode, accountId, transactionId }: Props) {
     isLoading: isTransLoading,
     error: transError
   } = useQuery({
-    queryKey: ['transaction', transactionId, 'basic'],
+    queryKey: queryKeys.transactionBasic(transactionId),
     queryFn: () => fetcher<Transactions>(`/transaction/${transactionId}/basic`),
     staleTime: 60 * 60 * 1000,
     enabled: !!transactionId && mode === 'edit'
@@ -51,8 +52,10 @@ export function TransactionPage({ mode, accountId, transactionId }: Props) {
     <PageLayout title={title}>
       <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 space-y-5">
         <TransactionForm
+          key={transactionId ?? accountId}
           name={data.name}
           accountId={accountId}
+          accountType={data.accountType}
           transaction={transactionData}
         />
       </div>

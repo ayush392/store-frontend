@@ -6,6 +6,7 @@ import { AccountForm } from '../AccountForm';
 import { PageLayout } from '../Layout';
 import { fetcher } from '../../lib/fetcher';
 import type { Account } from '../../shared/types';
+import { queryKeys } from '../../shared/queryKeys';
 
 type Props = {
   accountType: AccountType;
@@ -20,7 +21,7 @@ export function AccountPage({ accountType, mode, accountId }: Props) {
       : `Create new ${formatEnum(accountType)}`;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: [],
+    queryKey: queryKeys.accountBasic(accountId),
     queryFn: () => fetcher<Account>(`/account/${accountId}/basic`),
     staleTime: 10 * 60 * 1000, //10min
     enabled: mode === 'edit'
@@ -41,7 +42,12 @@ export function AccountPage({ accountType, mode, accountId }: Props) {
   return (
     <PageLayout title={title}>
       <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 space-y-5">
-        <AccountForm mode={mode} accountType={accountType} account={data} />
+        <AccountForm
+          key={data?._id ?? 'new'}
+          mode={mode}
+          accountType={accountType}
+          account={data}
+        />
       </div>
     </PageLayout>
   );

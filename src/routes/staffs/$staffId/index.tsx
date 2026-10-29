@@ -9,6 +9,7 @@ import { SectionHeader } from '../../../components/SectionHeader';
 import { TransactionList } from '../../../components/TransactionList';
 import { fetcher } from '../../../lib/fetcher';
 import type { Transactions, UserDetails } from '../../../shared/types';
+import { queryKeys } from '../../../shared/queryKeys';
 import { ListSkeleton } from '../../../components/placeholders/ListSkeleton';
 import { ProfileCardSkeleton } from '../../../components/placeholders/ProfileSkeleton';
 import { SkeletonWrapper } from '../../../components/placeholders/SkeletonWrapper';
@@ -25,7 +26,7 @@ function StaffDetailsPage() {
     'transactions'
   );
   const { data, isLoading, error } = useQuery({
-    queryKey: ['staff', staffId],
+    queryKey: queryKeys.accountDetail('STAFF', staffId),
     queryFn: () => fetcher<UserDetails>(`/account/${staffId}/`)
   });
 

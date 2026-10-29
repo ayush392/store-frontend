@@ -6,6 +6,7 @@ import { SectionHeader } from '../../../components/SectionHeader';
 import { TransactionList } from '../../../components/TransactionList';
 import { fetcher } from '../../../lib/fetcher';
 import type { Transactions, UserDetails } from '../../../shared/types';
+import { queryKeys } from '../../../shared/queryKeys';
 import { ListSkeleton } from '../../../components/placeholders/ListSkeleton';
 import { ProfileCardSkeleton } from '../../../components/placeholders/ProfileSkeleton';
 import { SkeletonWrapper } from '../../../components/placeholders/SkeletonWrapper';
@@ -20,7 +21,7 @@ function StoreDetailsPage() {
   const title = 'Store Details';
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['store', storeId],
+    queryKey: queryKeys.accountDetail('STORE', storeId),
     queryFn: () => fetcher<UserDetails>(`/account/${storeId}/`)
   });
 

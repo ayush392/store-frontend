@@ -2,12 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { fetcher } from '../lib/fetcher';
 import type { Chart } from '../shared/types';
+import { queryKeys } from '../shared/queryKeys';
 import { GraphSkeleton } from './placeholders/GraphSkeleton';
 import { SkeletonWrapper } from './placeholders/SkeletonWrapper';
 
 export default function WeeklyOverview() {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['graph'],
+    queryKey: queryKeys.graph(),
     queryFn: () => fetcher<Chart>('/transaction/graph'),
     staleTime: 10 * 60 * 1000
   });

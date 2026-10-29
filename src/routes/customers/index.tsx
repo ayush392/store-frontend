@@ -5,6 +5,7 @@ import { SectionHeader } from '../../components/SectionHeader';
 import { fetcher } from '../../lib/fetcher';
 import { formatAmount } from '../../shared/format';
 import type { Account } from '../../shared/types';
+import { queryKeys } from '../../shared/queryKeys';
 import { ListSkeleton } from '../../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../../components/placeholders/SkeletonWrapper';
 import { FloatingButton } from '../../components/FloatingButton';
@@ -15,7 +16,7 @@ export const Route = createFileRoute('/customers/')({
 
 function CustomersPage() {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['customers'],
+    queryKey: queryKeys.accountList('CUSTOMER'),
     queryFn: () => fetcher<Account[]>('/account?accountType=CUSTOMER')
   });
 

@@ -6,6 +6,7 @@ import { notifyError, notifySuccess } from '../lib/toast';
 import { BottomSheet } from './BottomSheet';
 import { UpdateAttendance } from './UpdateAttendance';
 import type { AttendanceType } from '../shared/schemas/staff.schema';
+import { queryKeys } from '../shared/queryKeys';
 
 type Attendance = {
   accountId: string;
@@ -43,7 +44,7 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
   const queryClient = useQueryClient();
 
   const { data: attendance = [] } = useQuery({
-    queryKey: ['calendar', accountId, currentMonth, currentYear],
+    queryKey: queryKeys.calendar(accountId, currentMonth, currentYear),
     queryFn: () =>
       fetcher<Attendance[]>(
         `/staff/${accountId}/attendance?month=${currentMonth + 1}&year=${currentYear}`
@@ -56,7 +57,7 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
       fetcher('/staff/attendance', 'PATCH', data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['calendar', accountId, currentMonth, currentYear]
+        queryKey: queryKeys.calendar(accountId, currentMonth, currentYear)
       });
       notifySuccess('Attendance updated');
       setIsOpen(false);

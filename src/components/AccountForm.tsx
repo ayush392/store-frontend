@@ -9,11 +9,10 @@ import { NumberInput } from './form/NumberInput';
 import { SelectInput } from './form/SelectInput';
 import { TextArea } from './form/TextArea';
 import { TextInput } from './form/TextInput';
-import type {
-  AccountType,
-  CreateAccount
-} from '../shared/schemas/account.schema';
+import type { AccountType } from '../shared/schemas/account.schema';
 import type { Account } from '../shared/types';
+import { accountAffectedKeys } from '../shared/queryKeys';
+import { getChangedFields } from '../shared/changedFields';
 
 type Props = {
   mode: 'create' | 'edit';
@@ -24,7 +23,7 @@ type Props = {
 export const AccountForm = ({ mode, accountType, account }: Props) => {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = useMutation({
+  const { mutateAsync, isPending } = useMutation({
     mutationFn: async (formData: unknown) => {
       if (mode === 'edit') {
         return fetcher(`/account/${account?._id}`, 'PATCH', formData);
@@ -43,7 +42,9 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
           ? 'Profile updated successfully'
           : `New ${accType} created`;
       notifySuccess(message);
-      queryClient.invalidateQueries({ queryKey: [accType] });
+      for (const queryKey of accountAffectedKeys(accountType, account?._id)) {
+        queryClient.invalidateQueries({ queryKey });
+      }
     },
     onError: (error) => {
       notifyError(error.message);
@@ -56,30 +57,28 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
     validators: {
       onSubmit: config.schema
     },
-    onSubmit: ({ value, formApi }) => {
+    onSubmit: async ({ value, formApi }) => {
       const defaultValues = formApi.options.defaultValues || {};
 
-      if (mode === 'edit') {
-        const changedValues: Partial<CreateAccount> = {};
-        const keys = Object.keys(defaultValues) as Array<
-          keyof typeof defaultValues
-        >;
-        for (const key of keys) {
-          if (value[key] !== defaultValues[key]) {
-            changedValues[key as keyof CreateAccount] = value[key];
-          }
-        }
+      try {
+        if (mode === 'edit') {
+          const changedValues = getChangedFields(value, defaultValues);
 
-        if (Object.keys(changedValues).length === 0) {
-          notifyError('Nothing to update');
+          if (Object.keys(changedValues).length === 0) {
+            notifyError('Nothing to update');
+            return;
+          }
+
+          await mutateAsync(changedValues);
           return;
         }
 
-        mutate(changedValues);
-        return;
+        await mutateAsync(value);
+        // Clear the form only after the account was created.
+        formApi.reset();
+      } catch {
+        // The error toast is shown by onError; keep the entered values.
       }
-      mutate(value);
-      formApi.reset();
     }
   });
 
@@ -92,6 +91,7 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
       className="space-y-4"
       onSubmit={(e) => {
         e.preventDefault();
+        if (form.state.isSubmitting || isPending) return; // no double submit
         form.handleSubmit();
       }}
     >

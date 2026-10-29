@@ -11,6 +11,7 @@ import {
 } from '../shared/format';
 import { CustomerIcon, StaffIcon, StoreIcon } from '../shared/icons';
 import type { RecentTrans } from '../shared/types';
+import { queryKeys } from '../shared/queryKeys';
 import { ListSkeleton } from '../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../components/placeholders/SkeletonWrapper';
 import { TransactionImageViewer } from '../components/TransactionImageViewer';
@@ -28,7 +29,7 @@ const actions = [
 
 function HomePage() {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['recent'],
+    queryKey: queryKeys.recent(),
     queryFn: () => fetcher<RecentTrans[]>('/transaction/recent'),
     staleTime: 5 * 60 * 1000
   });
