@@ -5,6 +5,7 @@ import { PageLayout } from '../Layout';
 import { TransactionForm } from '../TransactionForm';
 import type { ObjectId } from '../../shared/schemas/common.schema';
 import { queryKeys } from '../../shared/queryKeys';
+import { ErrorState } from '../ErrorState';
 
 type Props = {
   mode: 'create' | 'edit';
@@ -15,7 +16,7 @@ type Props = {
 export function TransactionPage({ mode, accountId, transactionId }: Props) {
   const title = mode === 'edit' ? 'Edit Transaction' : 'Create Transaction';
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.accountBasic(accountId),
     queryFn: () => fetcher<Account>(`/account/${accountId}/basic`),
     staleTime: 60 * 60 * 1000
@@ -24,7 +25,9 @@ export function TransactionPage({ mode, accountId, transactionId }: Props) {
   const {
     data: transactionData,
     isLoading: isTransLoading,
-    error: transError
+    error: transError,
+    refetch: refetchTransaction,
+    isFetching: isTransFetching
   } = useQuery({
     queryKey: queryKeys.transactionBasic(transactionId),
     queryFn: () => fetcher<Transactions>(`/transaction/${transactionId}/basic`),
@@ -36,10 +39,18 @@ export function TransactionPage({ mode, accountId, transactionId }: Props) {
     return <PageLayout title={title}>Loading...</PageLayout>;
   }
 
-  if (error || transError) {
+  const pageError = error ?? transError;
+  if (pageError) {
     return (
       <PageLayout title={title}>
-        <div>{error?.message || transError?.message}</div>
+        <ErrorState
+          error={pageError}
+          onRetry={() => {
+            if (error) refetch();
+            if (transError) refetchTransaction();
+          }}
+          isRetrying={isFetching || isTransFetching}
+        />
       </PageLayout>
     );
   }

@@ -29,12 +29,12 @@ export const SkeletonWrapper = <T extends object>({
   if (isEmpty)
     return (
       <div className="flex flex-col items-center justify-center p-12 space-y-4">
-        <div className="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full">
-          {<FiInbox size={36} className="text-gray-300" />}
+        <div className="flex items-center justify-center w-20 h-20 bg-surface-muted rounded-full">
+          <FiInbox size={36} className="text-fg-muted" aria-hidden="true" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-400 text-center">
+        <p className="text-base font-medium text-fg-secondary text-center">
           {message}
-        </h3>
+        </p>
       </div>
     );
 

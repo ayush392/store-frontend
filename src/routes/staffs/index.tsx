@@ -4,7 +4,12 @@ import { useState } from 'react';
 import { FiCheck, FiClock, FiDollarSign, FiX } from 'react-icons/fi';
 import { fetcher } from '../../lib/fetcher';
 import { notifyError, notifySuccess } from '../../lib/toast';
-import { formatAmount, formatEnum } from '../../shared/format';
+import { formatAmount } from '../../shared/format';
+import {
+  attendanceStatus,
+  unmarkedAttendanceClassName
+} from '../../shared/attendance';
+import { ErrorState } from '../../components/ErrorState';
 import type { Staff } from '../../shared/types';
 import { queryKeys } from '../../shared/queryKeys';
 import type {
@@ -21,7 +26,7 @@ export const Route = createFileRoute('/staffs/')({
 
 function StaffsPage() {
   const queryClient = useQueryClient();
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.accountList('STAFF'),
     queryFn: () => fetcher<Staff[]>('/staff')
   });
@@ -42,19 +47,6 @@ function StaffsPage() {
   });
 
   const [selectedStaffs, setSelectedStaffs] = useState<Set<string>>(new Set());
-
-  const getStatusColor = (status: AttendanceType) => {
-    switch (status) {
-      case 'PRESENT':
-        return 'bg-green-100 text-green-800';
-      case 'ABSENT':
-        return 'bg-red-100 text-red-800';
-      case 'HALF':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const handleSelectStaff = (type: 'all' | '', id?: string) => {
     setSelectedStaffs((prev) => {
@@ -90,8 +82,13 @@ function StaffsPage() {
   };
 
   if (error) {
-    console.log(error);
-    return <div>{error.message}</div>;
+    return (
+      <ErrorState
+        error={error}
+        onRetry={() => refetch()}
+        isRetrying={isFetching}
+      />
+    );
   }
 
   return (
@@ -186,11 +183,15 @@ function StaffsPage() {
                             </div>
                             <div className="flex items-center space-x-2 mt-1">
                               <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                                   staff.status
-                                )}`}
+                                    ? attendanceStatus[staff.status].className
+                                    : unmarkedAttendanceClassName
+                                }`}
                               >
-                                {formatEnum(staff.status) || 'None'}
+                                {staff.status
+                                  ? attendanceStatus[staff.status].label
+                                  : 'None'}
                               </span>
                               <span className="text-xs font-semibold text-gray-500">
                                 {staff.salaryType === 'DAILY'

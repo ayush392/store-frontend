@@ -7,6 +7,10 @@ import { BottomSheet } from './BottomSheet';
 import { UpdateAttendance } from './UpdateAttendance';
 import type { AttendanceType } from '../shared/schemas/staff.schema';
 import { queryKeys } from '../shared/queryKeys';
+import {
+  attendanceStatus,
+  unmarkedAttendanceClassName
+} from '../shared/attendance';
 
 type Attendance = {
   accountId: string;
@@ -18,15 +22,6 @@ type Attendance = {
 type Props = {
   accountId: string;
   employmentId: string | undefined;
-};
-
-const statusColors: Record<
-  AttendanceType,
-  { bg: string; text: string; label: string }
-> = {
-  PRESENT: { bg: 'bg-green-200', text: 'text-green-800', label: 'Present' },
-  ABSENT: { bg: 'bg-red-200', text: 'text-red-800', label: 'Absent' },
-  HALF: { bg: 'bg-yellow-200', text: 'text-yellow-800', label: 'Half Day' }
 };
 
 const formatDateKey = (date: Date) =>
@@ -193,21 +188,18 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
             const status = attendanceMap[dateKey];
 
             const isSelected = selectedDate === dateKey;
-            const bgColor = isFuture
-              ? 'bg-gray-200 opacity-50'
+            const colorClass = isFuture
+              ? `${unmarkedAttendanceClassName} opacity-50`
               : status
-                ? statusColors[status].bg
-                : 'bg-gray-200';
-            const textColor = status
-              ? statusColors[status].text
-              : 'text-gray-800';
-            const selectedClass = isSelected ? 'ring-2 ring-blue-500' : '';
+                ? attendanceStatus[status].className
+                : unmarkedAttendanceClassName;
+            const selectedClass = isSelected ? 'ring-2 ring-focus' : '';
 
             return (
               <div
                 key={i}
                 onClick={() => !isFuture && handleDateClick(dateKey)}
-                className={`h-8 w-8 flex font-medium items-center justify-center rounded-full ${bgColor} ${textColor} ${selectedClass} text-sm sm:text-base`}
+                className={`h-8 w-8 flex font-medium items-center justify-center rounded-full ${colorClass} ${selectedClass} text-sm sm:text-base`}
               >
                 {i + 1}
               </div>
@@ -235,10 +227,11 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
         {(['PRESENT', 'ABSENT', 'HALF'] as AttendanceType[]).map((status) => (
           <div key={status} className="flex items-center space-x-1">
             <span
-              className={`h-4 w-4 rounded-full ${statusColors[status].bg}`}
+              className={`h-4 w-4 rounded-full ${attendanceStatus[status].dotClassName}`}
+              aria-hidden="true"
             />
-            <span className="text-gray-500 font-medium">
-              {statusColors[status].label}: {counts[status]}
+            <span className="text-fg-secondary font-medium">
+              {attendanceStatus[status].label}: {counts[status]}
             </span>
           </div>
         ))}

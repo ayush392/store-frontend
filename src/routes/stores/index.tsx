@@ -9,20 +9,26 @@ import { queryKeys } from '../../shared/queryKeys';
 import { ListSkeleton } from '../../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../../components/placeholders/SkeletonWrapper';
 import { FloatingButton } from '../../components/FloatingButton';
+import { ErrorState } from '../../components/ErrorState';
 
 export const Route = createFileRoute('/stores/')({
   component: StoresPage
 });
 
 function StoresPage() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.accountList('STORE'),
     queryFn: () => fetcher<Account[]>('/account?accountType=STORE')
   });
 
   if (error) {
-    console.log(error);
-    return <div>{error.message}</div>;
+    return (
+      <ErrorState
+        error={error}
+        onRetry={() => refetch()}
+        isRetrying={isFetching}
+      />
+    );
   }
 
   return (

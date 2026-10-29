@@ -7,6 +7,7 @@ import { PageLayout } from '../Layout';
 import { fetcher } from '../../lib/fetcher';
 import type { Account } from '../../shared/types';
 import { queryKeys } from '../../shared/queryKeys';
+import { ErrorState } from '../ErrorState';
 
 type Props = {
   accountType: AccountType;
@@ -20,7 +21,7 @@ export function AccountPage({ accountType, mode, accountId }: Props) {
       ? `Edit ${formatEnum(accountType)}'s Profile`
       : `Create new ${formatEnum(accountType)}`;
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.accountBasic(accountId),
     queryFn: () => fetcher<Account>(`/account/${accountId}/basic`),
     staleTime: 10 * 60 * 1000, //10min
@@ -34,7 +35,11 @@ export function AccountPage({ accountType, mode, accountId }: Props) {
   if (error) {
     return (
       <PageLayout title={title}>
-        <div>{error.message}</div>
+        <ErrorState
+          error={error}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </PageLayout>
     );
   }

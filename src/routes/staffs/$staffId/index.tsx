@@ -14,6 +14,7 @@ import { ListSkeleton } from '../../../components/placeholders/ListSkeleton';
 import { ProfileCardSkeleton } from '../../../components/placeholders/ProfileSkeleton';
 import { SkeletonWrapper } from '../../../components/placeholders/SkeletonWrapper';
 import { FloatingButton } from '../../../components/FloatingButton';
+import { ErrorState } from '../../../components/ErrorState';
 
 export const Route = createFileRoute('/staffs/$staffId/')({
   component: StaffDetailsPage
@@ -25,7 +26,7 @@ function StaffDetailsPage() {
   const [activeTab, setActiveTab] = useState<'transactions' | 'attendance'>(
     'transactions'
   );
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.accountDetail('STAFF', staffId),
     queryFn: () => fetcher<UserDetails>(`/account/${staffId}/`)
   });
@@ -33,7 +34,11 @@ function StaffDetailsPage() {
   if (error) {
     return (
       <PageLayout title={title}>
-        <div>{error.message}</div>
+        <ErrorState
+          error={error}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </PageLayout>
     );
   }

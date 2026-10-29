@@ -15,6 +15,7 @@ import { queryKeys } from '../shared/queryKeys';
 import { ListSkeleton } from '../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../components/placeholders/SkeletonWrapper';
 import { TransactionImageViewer } from '../components/TransactionImageViewer';
+import { ErrorState } from '../components/ErrorState';
 
 export const Route = createFileRoute('/')({
   component: HomePage
@@ -28,7 +29,7 @@ const actions = [
 ] as const;
 
 function HomePage() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.recent(),
     queryFn: () => fetcher<RecentTrans[]>('/transaction/recent'),
     staleTime: 5 * 60 * 1000
@@ -41,8 +42,13 @@ function HomePage() {
   };
 
   if (error) {
-    console.log(error);
-    return <div>{error.message}</div>;
+    return (
+      <ErrorState
+        error={error}
+        onRetry={() => refetch()}
+        isRetrying={isFetching}
+      />
+    );
   }
 
   return (

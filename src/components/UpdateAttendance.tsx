@@ -2,16 +2,11 @@ import { useState, type JSX } from 'react';
 import { FiCheckCircle, FiClock, FiXCircle } from 'react-icons/fi';
 import { formatDate } from '../shared/format';
 import type { AttendanceType } from '../shared/schemas/staff.schema';
+import {
+  attendanceStatus,
+  unmarkedAttendanceClassName
+} from '../shared/attendance';
 import { Button } from './Button';
-
-const statusColors: Record<
-  AttendanceType,
-  { bg: string; text: string; label: string }
-> = {
-  PRESENT: { bg: 'bg-green-200', text: 'text-green-800', label: 'Present' },
-  ABSENT: { bg: 'bg-red-200', text: 'text-red-800', label: 'Absent' },
-  HALF: { bg: 'bg-yellow-200', text: 'text-yellow-800', label: 'Half Day' }
-};
 
 type UpdateAttendanceProps = {
   selectedDate: string;
@@ -31,14 +26,14 @@ export function UpdateAttendance({
   );
 
   const options: Array<{ type: AttendanceType; icon: JSX.Element }> = [
-    { type: 'PRESENT', icon: <FiCheckCircle size={20} /> },
-    { type: 'ABSENT', icon: <FiXCircle size={20} /> },
-    { type: 'HALF', icon: <FiClock size={20} /> }
+    { type: 'PRESENT', icon: <FiCheckCircle size={20} aria-hidden="true" /> },
+    { type: 'ABSENT', icon: <FiXCircle size={20} aria-hidden="true" /> },
+    { type: 'HALF', icon: <FiClock size={20} aria-hidden="true" /> }
   ];
 
   return (
     <div className="p-4 space-y-8">
-      <p className="text-gray-700 text-center font-medium text-lg">
+      <p className="text-fg text-center font-medium text-lg">
         Mark attendance for{' '}
         <span className="font-semibold">{formatDate(selectedDate)}</span>
       </p>
@@ -46,19 +41,21 @@ export function UpdateAttendance({
       <div className="grid grid-cols-3 gap-6">
         {options.map(({ type, icon }) => {
           const isSelected = status === type;
-          const color = statusColors[type];
+          const { label, className } = attendanceStatus[type];
           return (
             <button
               key={type}
+              type="button"
+              aria-pressed={isSelected}
               onClick={() => setStatus(type)}
-              className={`flex flex-col items-center justify-center p-4 rounded-xl font-semibold transition-transform active:scale-95 shadow-md ${
+              className={`flex flex-col items-center justify-center p-4 rounded-xl font-semibold transition-transform active:scale-95 ${
                 isSelected
-                  ? `${color.bg} ${color.text}`
-                  : 'bg-gray-100 text-gray-700'
+                  ? `${className} ring-2 ring-inset ring-current`
+                  : unmarkedAttendanceClassName
               }`}
             >
               <div className="mb-1">{icon}</div>
-              {color.label}
+              {label}
             </button>
           );
         })}
@@ -72,7 +69,7 @@ export function UpdateAttendance({
         {isLoading
           ? 'Saving...'
           : status
-            ? 'Mark as ' + statusColors[status].label
+            ? 'Mark as ' + attendanceStatus[status].label
             : 'Save'}
       </Button>
     </div>

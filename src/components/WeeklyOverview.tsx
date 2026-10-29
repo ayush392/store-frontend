@@ -5,9 +5,10 @@ import type { Chart } from '../shared/types';
 import { queryKeys } from '../shared/queryKeys';
 import { GraphSkeleton } from './placeholders/GraphSkeleton';
 import { SkeletonWrapper } from './placeholders/SkeletonWrapper';
+import { ErrorState } from './ErrorState';
 
 export default function WeeklyOverview() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.graph(),
     queryFn: () => fetcher<Chart>('/transaction/graph'),
     staleTime: 10 * 60 * 1000
@@ -56,8 +57,13 @@ export default function WeeklyOverview() {
     .reverse();
 
   if (error) {
-    console.log(error);
-    return <div>{error.message}</div>;
+    return (
+      <ErrorState
+        error={error}
+        onRetry={() => refetch()}
+        isRetrying={isFetching}
+      />
+    );
   }
 
   return (

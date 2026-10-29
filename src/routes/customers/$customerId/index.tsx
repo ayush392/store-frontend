@@ -11,6 +11,7 @@ import { ListSkeleton } from '../../../components/placeholders/ListSkeleton';
 import { ProfileCardSkeleton } from '../../../components/placeholders/ProfileSkeleton';
 import { SkeletonWrapper } from '../../../components/placeholders/SkeletonWrapper';
 import { FloatingButton } from '../../../components/FloatingButton';
+import { ErrorState } from '../../../components/ErrorState';
 
 export const Route = createFileRoute('/customers/$customerId/')({
   component: CustomerDetailsPage
@@ -20,7 +21,7 @@ function CustomerDetailsPage() {
   const { customerId } = Route.useParams();
   const title = 'Customer Details';
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.accountDetail('CUSTOMER', customerId),
     queryFn: () => fetcher<UserDetails>(`/account/${customerId}/`)
   });
@@ -28,7 +29,11 @@ function CustomerDetailsPage() {
   if (error) {
     return (
       <PageLayout title={title}>
-        <div>{error.message}</div>
+        <ErrorState
+          error={error}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </PageLayout>
     );
   }
