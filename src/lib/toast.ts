@@ -2,7 +2,6 @@ import { toast, type ToastOptions } from 'react-hot-toast';
 
 const defaultOptions: ToastOptions = {
   duration: 3000
-  // position: 'bottom-center'
 };
 
 export const notifySuccess = (message: string) => {

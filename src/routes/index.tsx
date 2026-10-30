@@ -26,7 +26,6 @@ const actions = [
   { key: 'customers', label: 'Add Customer', icon: CustomerIcon },
   { key: 'staffs', label: 'Add Staff', icon: StaffIcon },
   { key: 'stores', label: 'Add Store', icon: StoreIcon }
-  // { key: 'transactions', label: 'Add Transaction', icon: FiDollarSign }
 ] as const;
 
 function HomePage() {

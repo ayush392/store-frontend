@@ -64,7 +64,7 @@ function StaffsPage() {
       const newSet = new Set(prev);
 
       if (type === 'all') {
-        if (newSet.size === data?.length || 0) {
+        if (newSet.size === data?.length) {
           return new Set(); // clear all
         } else {
           data?.forEach((staff) => newSet.add(staff.employmentId));
