@@ -4,6 +4,7 @@ import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { fetcher } from '../lib/fetcher';
 import { notifyError, notifySuccess } from '../lib/toast';
 import { BottomSheet } from './BottomSheet';
+import { Button } from './Button';
 import { UpdateAttendance } from './UpdateAttendance';
 import type { AttendanceType } from '../shared/schemas/staff.schema';
 import { queryKeys } from '../shared/queryKeys';
@@ -28,6 +29,16 @@ const formatDateKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
     date.getDate()
   ).padStart(2, '0')}`;
+
+const weekdays = [
+  ['Sun', 'Sunday'],
+  ['Mon', 'Monday'],
+  ['Tue', 'Tuesday'],
+  ['Wed', 'Wednesday'],
+  ['Thu', 'Thursday'],
+  ['Fri', 'Friday'],
+  ['Sat', 'Saturday']
+] as const;
 
 export const Calendar = ({ accountId, employmentId }: Props) => {
   const today = new Date();
@@ -54,6 +65,10 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.calendar(accountId, currentMonth, currentYear)
       });
+      // The staff list shows today's status for each person.
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.accountList('STAFF')
+      });
       notifySuccess('Attendance updated');
       setIsOpen(false);
     },
@@ -78,6 +93,10 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstWeekday = new Date(currentYear, currentMonth, 1).getDay();
+  const monthLabel = new Date(currentYear, currentMonth).toLocaleString(
+    'default',
+    { month: 'long', year: 'numeric' }
+  );
 
   const attendanceMap = useMemo(() => {
     const map: Record<string, AttendanceType> = {};
@@ -131,52 +150,53 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-4">
+    <div className="mx-auto w-full max-w-md p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        {/* Month navigation */}
-        <div className="flex items-center space-x-3">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={prevMonth}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
+            aria-label="Previous month"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary active:bg-surface-muted"
           >
-            <FiChevronLeft size={20} />
+            <FiChevronLeft size={22} aria-hidden="true" />
           </button>
 
-          <h3 className="text-lg font-semibold text-gray-800">
-            {new Date(currentYear, currentMonth).toLocaleString('default', {
-              month: 'long',
-              year: 'numeric'
-            })}
+          <h3
+            aria-live="polite"
+            className="min-w-32 text-center text-lg font-semibold text-fg"
+          >
+            {monthLabel}
           </h3>
 
           <button
+            type="button"
             onClick={nextMonth}
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
+            aria-label="Next month"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary active:bg-surface-muted"
           >
-            <FiChevronRight size={20} />
+            <FiChevronRight size={22} aria-hidden="true" />
           </button>
         </div>
 
-        {/* Today button */}
-        <button
-          onClick={jumpToToday}
-          className="px-3 py-1 bg-blue-100 text-blue-700 font-medium rounded-full hover:bg-blue-200 transition-colors text-sm sm:text-base"
-        >
+        <Button variant="secondary" className="px-3 text-sm" onClick={jumpToToday}>
           Today
-        </button>
+        </Button>
       </div>
 
-      <div className=" bg-gray-50 p-4 rounded-lg">
+      <div className="rounded-lg bg-surface-muted p-2">
         {/* Days of week */}
-        <div className="grid grid-cols-7 gap-4 text-center font-medium mb-4 text-gray-700 text-sm sm:text-base">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-            <div key={d}>{d}</div>
+        <div className="mb-1 grid grid-cols-7 text-center text-xs font-medium text-fg-secondary">
+          {weekdays.map(([short, full]) => (
+            <abbr key={short} title={full} className="py-1 no-underline">
+              {short}
+            </abbr>
           ))}
         </div>
 
         {/* Dates */}
-        <div className="grid grid-cols-7 gap-3.5 text-center">
+        <div className="grid grid-cols-7 gap-y-1 text-center">
           {Array.from({ length: firstWeekday }).map((_, i) => (
             <div key={`empty-${i}`} />
           ))}
@@ -186,22 +206,34 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
             const isFuture = dateObj > today;
             const dateKey = formatDateKey(dateObj);
             const status = attendanceMap[dateKey];
-
             const isSelected = selectedDate === dateKey;
-            const colorClass = isFuture
-              ? `${unmarkedAttendanceClassName} opacity-50`
-              : status
-                ? attendanceStatus[status].className
-                : unmarkedAttendanceClassName;
-            const selectedClass = isSelected ? 'ring-2 ring-focus' : '';
+            const isToday = dateKey === formatDateKey(today);
+
+            const colorClass = status
+              ? attendanceStatus[status].className
+              : unmarkedAttendanceClassName;
+            const dateLabel = dateObj.toLocaleDateString('en-GB', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long'
+            });
 
             return (
-              <div
-                key={i}
-                onClick={() => !isFuture && handleDateClick(dateKey)}
-                className={`h-8 w-8 flex font-medium items-center justify-center rounded-full ${colorClass} ${selectedClass} text-sm sm:text-base`}
-              >
-                {i + 1}
+              <div key={i} className="flex items-center justify-center">
+                <button
+                  type="button"
+                  disabled={isFuture}
+                  onClick={() => handleDateClick(dateKey)}
+                  aria-label={`${dateLabel}: ${
+                    status ? attendanceStatus[status].label : 'Not marked'
+                  }`}
+                  aria-current={isToday ? 'date' : undefined}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium tabular-nums ${colorClass} ${
+                    isSelected ? 'ring-2 ring-focus' : ''
+                  } ${isToday ? 'font-bold underline underline-offset-2' : ''} disabled:cursor-not-allowed disabled:opacity-40`}
+                >
+                  {i + 1}
+                </button>
               </div>
             );
           })}
@@ -210,8 +242,9 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
 
       {isOpen && selectedDate && (
         <BottomSheet
-          title={`Update Attendance`}
+          title="Update Attendance"
           onClose={() => setIsOpen(false)}
+          dismissible={!isPending}
         >
           <UpdateAttendance
             selectedDate={selectedDate}
@@ -223,14 +256,14 @@ export const Calendar = ({ accountId, employmentId }: Props) => {
       )}
 
       {/* Attendance legend and counts */}
-      <div className="flex mt-4 items-center justify-around text-sm sm:text-base">
+      <div className="mt-3 flex flex-wrap items-center justify-around gap-2 text-sm">
         {(['PRESENT', 'ABSENT', 'HALF'] as AttendanceType[]).map((status) => (
-          <div key={status} className="flex items-center space-x-1">
+          <div key={status} className="flex items-center gap-1.5">
             <span
-              className={`h-4 w-4 rounded-full ${attendanceStatus[status].dotClassName}`}
+              className={`h-3 w-3 rounded-full ${attendanceStatus[status].dotClassName}`}
               aria-hidden="true"
             />
-            <span className="text-fg-secondary font-medium">
+            <span className="font-medium text-fg-secondary">
               {attendanceStatus[status].label}: {counts[status]}
             </span>
           </div>
