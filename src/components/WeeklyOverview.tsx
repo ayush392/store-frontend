@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { fetcher } from '../lib/fetcher';
 import { formatAmount } from '../shared/format';
+import { getChartScale } from '../shared/chartScale';
 import type { Chart } from '../shared/types';
 import { queryKeys } from '../shared/queryKeys';
 import { GraphSkeleton } from './placeholders/GraphSkeleton';
@@ -37,9 +38,9 @@ export default function WeeklyOverview() {
 
   const points = useMemo(() => data?.chartData ?? [], [data]);
 
-  // Guard against an all-zero week (division by zero) by scaling to at least 1.
-  const maxAmount = useMemo(
-    () => Math.max(1, ...points.map((d) => Math.max(d.credit, d.debit))),
+  // Nice y-axis scale; also handles an all-zero week (no division by zero).
+  const { max: maxAmount, ticks } = useMemo(
+    () => getChartScale(Math.max(0, ...points.map((d) => Math.max(d.credit, d.debit)))),
     [points]
   );
 
@@ -57,9 +58,7 @@ export default function WeeklyOverview() {
   const getPoints = (key: 'credit' | 'debit') =>
     points.map((d, i) => `${getX(i)},${getY(d[key])}`).join(' ');
 
-  const yTicks = [1, 0.75, 0.5, 0.25, 0].map((f) =>
-    Math.round(f * maxAmount).toLocaleString('en-IN')
-  );
+  const yTicks = ticks.map((tick) => tick.toLocaleString('en-IN'));
 
   if (error) {
     return (
