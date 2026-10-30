@@ -19,9 +19,16 @@ type Props = {
   mode: 'create' | 'edit';
   accountType: AccountType;
   account?: Account;
+  // Called after the account is saved (the page navigates away).
+  onSaved: () => void;
 };
 
-export const AccountForm = ({ mode, accountType, account }: Props) => {
+export const AccountForm = ({
+  mode,
+  accountType,
+  account,
+  onSaved
+}: Props) => {
   const queryClient = useQueryClient();
 
   const { mutateAsync, isPending } = useMutation({
@@ -71,15 +78,16 @@ export const AccountForm = ({ mode, accountType, account }: Props) => {
           }
 
           await mutateAsync(changedValues);
-          return;
+        } else {
+          await mutateAsync(value);
         }
-
-        await mutateAsync(value);
-        // Clear the form only after the account was created.
-        formApi.reset();
       } catch {
         // The error toast is shown by onError; keep the entered values.
+        return;
       }
+
+      // Leave the form only after the account was saved.
+      onSaved();
     }
   });
 

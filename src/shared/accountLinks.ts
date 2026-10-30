@@ -3,6 +3,17 @@ import type { AccountType } from './schemas/account.schema';
 // Typed router links for an account, by account type. Use these instead of
 // building '/customers/...' style paths by hand.
 
+export const accountListLink = (type: AccountType) => {
+  switch (type) {
+    case 'CUSTOMER':
+      return { to: '/customers' } as const;
+    case 'STORE':
+      return { to: '/stores' } as const;
+    case 'STAFF':
+      return { to: '/staffs' } as const;
+  }
+};
+
 export const accountDetailLink = (type: AccountType, accountId: string) => {
   switch (type) {
     case 'CUSTOMER':

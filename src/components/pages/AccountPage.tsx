@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useCanGoBack, useRouter } from '@tanstack/react-router';
 import { formatEnum } from '../../shared/format';
 import type { AccountType } from '../../shared/schemas/account.schema';
 import type { ObjectId } from '../../shared/schemas/common.schema';
@@ -7,7 +8,9 @@ import { PageLayout } from '../Layout';
 import { fetcher } from '../../lib/fetcher';
 import type { Account } from '../../shared/types';
 import { queryKeys } from '../../shared/queryKeys';
+import { accountDetailLink, accountListLink } from '../../shared/accountLinks';
 import { ErrorState } from '../ErrorState';
+import { FormSkeleton } from '../placeholders/FormSkeleton';
 
 type Props = {
   accountType: AccountType;
@@ -20,6 +23,8 @@ export function AccountPage({ accountType, mode, accountId }: Props) {
     mode === 'edit'
       ? `Edit ${formatEnum(accountType)}'s Profile`
       : `Create new ${formatEnum(accountType)}`;
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.accountBasic(accountId),
@@ -29,7 +34,11 @@ export function AccountPage({ accountType, mode, accountId }: Props) {
   });
 
   if (isLoading) {
-    return <PageLayout title={title}>Loading...</PageLayout>;
+    return (
+      <PageLayout title={title}>
+        <FormSkeleton />
+      </PageLayout>
+    );
   }
 
   if (error) {
@@ -44,14 +53,30 @@ export function AccountPage({ accountType, mode, accountId }: Props) {
     );
   }
 
+  // After saving, return to where the user came from. If the page was opened
+  // directly (no in-app history), go to the account (edit) or its list (new).
+  const onSaved = () => {
+    if (canGoBack) {
+      router.history.back();
+    } else if (mode === 'edit' && accountId) {
+      router.navigate({
+        ...accountDetailLink(accountType, accountId),
+        replace: true
+      });
+    } else {
+      router.navigate({ ...accountListLink(accountType), replace: true });
+    }
+  };
+
   return (
     <PageLayout title={title}>
-      <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 space-y-5">
+      <div className="rounded-xl bg-surface p-4 shadow-sm">
         <AccountForm
           key={data?._id ?? 'new'}
           mode={mode}
           accountType={accountType}
           account={data}
+          onSaved={onSaved}
         />
       </div>
     </PageLayout>
