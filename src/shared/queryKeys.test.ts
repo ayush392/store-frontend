@@ -33,6 +33,14 @@ describe('queryKeys', () => {
       queryKeys.calendar('a', 4, 2026)
     );
   });
+
+  // Bulk attendance marks several staff at once, so it refreshes every
+  // calendar by prefix; the prefix must match the start of each calendar key.
+  it('allCalendars is a prefix of every calendar key', () => {
+    const prefix = queryKeys.allCalendars();
+    const key = queryKeys.calendar('a', 3, 2026);
+    expect(key.slice(0, prefix.length)).toEqual([...prefix]);
+  });
 });
 
 describe('transactionAffectedKeys', () => {

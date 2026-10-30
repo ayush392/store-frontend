@@ -26,6 +26,8 @@ export const queryKeys = {
   graph: () => ['graph'] as const,
   calendar: (accountId: string, month: number, year: number) =>
     ['calendar', accountId, month, year] as const,
+  // Prefix of every calendar query (all staff, all months).
+  allCalendars: () => ['calendar'] as const,
   me: () => ['me'] as const
 };
 
