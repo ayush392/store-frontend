@@ -33,7 +33,7 @@ function CustomersPage() {
   return (
     <div className="space-y-4">
       <section className="overflow-hidden rounded-xl bg-surface shadow-sm">
-        <SectionHeader title="Customers" />
+        <SectionHeader title="Customers" as="h1" />
 
         <SkeletonWrapper<Account[]>
           isLoading={isLoading}

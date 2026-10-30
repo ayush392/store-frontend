@@ -1,12 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { fetcher } from '../lib/fetcher';
+import { formatAmount } from '../shared/format';
 import type { Chart } from '../shared/types';
 import { queryKeys } from '../shared/queryKeys';
 import { GraphSkeleton } from './placeholders/GraphSkeleton';
 import { SkeletonWrapper } from './placeholders/SkeletonWrapper';
 import { ErrorState } from './ErrorState';
 
+const svgWidth = 200;
+const svgHeight = 100;
+const paddingTop = 10;
+const paddingBottom = 10;
+
+const shortDate = (date: string) => {
+  const d = new Date(date);
+  return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+// Credit = payments received (lowers balances); debit = udhaar and advances
+// given (raises balances). See store-backend transactionOverview.
 export default function WeeklyOverview() {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.graph(),
@@ -14,47 +27,39 @@ export default function WeeklyOverview() {
     staleTime: 10 * 60 * 1000
   });
 
-  const [maxAmount, setMaxAmount] = useState(100);
   const [tooltip, setTooltip] = useState<null | {
     x: number;
     y: number;
+    date: string;
     credit: number;
     debit: number;
   }>(null);
 
-  useEffect(() => {
-    (async () => {
-      if (!data) return;
-      const max = Math.max(
-        ...data.chartData.map((d) => Math.max(d.credit, d.debit))
-      );
-      setMaxAmount(max);
-    })();
-  }, [data]);
+  const points = useMemo(() => data?.chartData ?? [], [data]);
 
-  const svgWidth = 200;
-  const svgHeight = 100;
-  const paddingTop = 10;
-  const paddingBottom = 10;
+  // Guard against an all-zero week (division by zero) by scaling to at least 1.
+  const maxAmount = useMemo(
+    () => Math.max(1, ...points.map((d) => Math.max(d.credit, d.debit))),
+    [points]
+  );
 
-  // Convert value to Y coordinate
   const getY = (value: number) =>
     svgHeight -
     paddingBottom -
     (value / maxAmount) * (svgHeight - paddingTop - paddingBottom);
 
-  // Convert index to X coordinate
+  // A single day is drawn in the middle (no division by zero).
   const getX = (index: number) =>
-    data ? (index / (data.chartData.length - 1)) * (svgWidth - 20) + 10 : 0; // 10px padding left & right
+    points.length <= 1
+      ? svgWidth / 2
+      : (index / (points.length - 1)) * (svgWidth - 20) + 10;
 
-  // Generate points string for polyline
   const getPoints = (key: 'credit' | 'debit') =>
-    data?.chartData.map((d, i) => `${getX(i)},${getY(d[key])}`).join(' ');
+    points.map((d, i) => `${getX(i)},${getY(d[key])}`).join(' ');
 
-  // Y-axis ticks
-  const yTicks = [0, 0.25, 0.5, 0.75, 1]
-    .map((f) => Math.round(f * maxAmount))
-    .reverse();
+  const yTicks = [1, 0.75, 0.5, 0.25, 0].map((f) =>
+    Math.round(f * maxAmount).toLocaleString('en-IN')
+  );
 
   if (error) {
     return (
@@ -66,195 +71,178 @@ export default function WeeklyOverview() {
     );
   }
 
+  const showTooltip = (index: number, y: number) => {
+    const d = points[index];
+    setTooltip({ x: getX(index), y, date: d.date, credit: d.credit, debit: d.debit });
+  };
+
   return (
-    <div className="bg-white rounded-lg p-4 shadow-sm max-w-full overflow-x-auto relative">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Weekly Overview</h3>
-      </div>
+    <section className="relative max-w-full rounded-xl bg-surface p-4 shadow-sm">
+      <h2 className="mb-4 text-lg font-semibold text-fg">Weekly overview</h2>
 
       <SkeletonWrapper<Chart>
         isLoading={isLoading}
         skeleton={<GraphSkeleton />}
         data={data}
-        message="No data found"
+        message="No data yet"
       >
-        {!data?.chartData?.length ? (
-          <div className="flex h-40 items-center justify-center font-semibold text-gray-400">
-            Not enough data.
+        {!points.length ? (
+          <div className="flex h-40 items-center justify-center text-base font-medium text-fg-secondary">
+            No transactions this week.
           </div>
         ) : (
-          <div className="h-40 relative flex chart-container">
-            {/* Y-axis labels */}
-            <div className="flex flex-col justify-between text-xs text-gray-600 mr-2">
-              {yTicks.map((val, idx) => (
-                <span key={idx}>{val}</span>
-              ))}
-            </div>
-
-            <div className="flex-1 relative">
-              <svg
-                className="w-full h-full"
-                viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-                preserveAspectRatio="none"
+          <>
+            <div className="relative flex h-40">
+              {/* Y-axis labels */}
+              <div
+                aria-hidden="true"
+                className="mr-2 flex flex-col justify-between text-xs text-fg-secondary tabular-nums"
               >
-                {/* Credit line */}
-                <polyline
-                  fill="none"
-                  stroke="#2563eb"
-                  strokeWidth="2"
-                  points={getPoints('credit')}
-                  strokeDasharray="500"
-                  strokeDashoffset="500"
-                  style={{ animation: 'draw 1s forwards' }}
-                />
-                {/* Debit line */}
-                <polyline
-                  fill="none"
-                  stroke="#dc2626"
-                  strokeWidth="2"
-                  points={getPoints('debit')}
-                  strokeDasharray="500"
-                  strokeDashoffset="500"
-                  style={{ animation: 'draw 1s forwards 0.2s' }}
-                />
-
-                {/* Dots */}
-                {data?.chartData.map((data, index) => {
-                  const cx = getX(index);
-                  const cyCredit = getY(data.credit);
-                  const cyDebit = getY(data.debit);
-
-                  return (
-                    <g key={`dots-${index}`}>
-                      {/* Credit hit area */}
-                      <circle
-                        cx={cx}
-                        cy={cyCredit}
-                        r={8}
-                        fill="rgba(0,0,0,0)"
-                        onMouseEnter={() =>
-                          setTooltip({
-                            x: cx,
-                            y: cyCredit,
-                            credit: data.credit,
-                            debit: data.debit
-                          })
-                        }
-                        onMouseLeave={() => setTooltip(null)}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                          setTooltip({
-                            x: cx,
-                            y: cyCredit,
-                            credit: data.credit,
-                            debit: data.debit
-                          });
-                        }}
-                      />
-                      {/* Credit dot */}
-                      <circle
-                        cx={cx}
-                        cy={cyCredit}
-                        r={3}
-                        fill="#2563eb"
-                        pointerEvents="none"
-                      />
-
-                      {/* Debit hit area */}
-                      <circle
-                        cx={cx}
-                        cy={cyDebit}
-                        r={8}
-                        fill="rgba(0,0,0,0)"
-                        onMouseEnter={() =>
-                          setTooltip({
-                            x: cx,
-                            y: cyDebit,
-                            credit: data.credit,
-                            debit: data.debit
-                          })
-                        }
-                        onMouseLeave={() => setTooltip(null)}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                          setTooltip({
-                            x: cx,
-                            y: cyDebit,
-                            credit: data.credit,
-                            debit: data.debit
-                          });
-                        }}
-                      />
-                      {/* Debit dot */}
-                      <circle
-                        cx={cx}
-                        cy={cyDebit}
-                        r={3}
-                        fill="#dc2626"
-                        pointerEvents="none"
-                      />
-                    </g>
-                  );
-                })}
-
-                <style>{`
-              @keyframes draw {
-                to { stroke-dashoffset: 0; }
-              }
-            `}</style>
-              </svg>
-
-              {/* X-axis labels */}
-              <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-600">
-                {data?.chartData.map((data, index) => {
-                  const dateObj = new Date(data.date);
-                  const day = String(dateObj.getDate()).padStart(2, '0');
-                  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                  return (
-                    <span key={index}>
-                      {day}-{month}
-                    </span>
-                  );
-                })}
+                {yTicks.map((val, idx) => (
+                  <span key={idx}>{val}</span>
+                ))}
               </div>
 
-              {/* Tooltip */}
-              {tooltip && (
-                <div
-                  className="absolute bg-white shadow-md rounded-md text-xs text-gray-800"
-                  style={{
-                    left: `${(tooltip.x / svgWidth) * 100}%`,
-                    top: `${tooltip.y}%`,
-                    transform: 'translate(-50%, -110%)',
-                    padding: '6px 10px',
-                    pointerEvents: 'none',
-                    whiteSpace: 'nowrap'
-                  }}
+              <div className="relative flex-1">
+                <svg
+                  className="h-full w-full"
+                  viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                  onTouchStart={() => setTooltip(null)}
                 >
-                  <div className="text-blue-600 font-medium">
-                    Credit: {tooltip.credit}
-                  </div>
-                  <div className="text-rose-600 font-medium">
-                    Debit: {tooltip.debit}
-                  </div>
+                  {points.length > 1 && (
+                    <>
+                      <polyline
+                        fill="none"
+                        className="stroke-credit"
+                        strokeWidth="2"
+                        points={getPoints('credit')}
+                        strokeDasharray="500"
+                        strokeDashoffset="500"
+                        style={{ animation: 'draw 1s forwards' }}
+                      />
+                      <polyline
+                        fill="none"
+                        className="stroke-debit"
+                        strokeWidth="2"
+                        points={getPoints('debit')}
+                        strokeDasharray="500"
+                        strokeDashoffset="500"
+                        style={{ animation: 'draw 1s forwards 0.2s' }}
+                      />
+                    </>
+                  )}
+
+                  {points.map((d, index) => {
+                    const cx = getX(index);
+                    return (['credit', 'debit'] as const).map((key) => {
+                      const cy = getY(d[key]);
+                      return (
+                        <g key={`${key}-${index}`}>
+                          {/* Larger invisible hit area for touch */}
+                          <circle
+                            cx={cx}
+                            cy={cy}
+                            r={8}
+                            fill="transparent"
+                            onMouseEnter={() => showTooltip(index, cy)}
+                            onMouseLeave={() => setTooltip(null)}
+                            onTouchStart={(e) => {
+                              e.stopPropagation();
+                              showTooltip(index, cy);
+                            }}
+                          />
+                          <circle
+                            cx={cx}
+                            cy={cy}
+                            r={3}
+                            className={key === 'credit' ? 'fill-credit' : 'fill-debit'}
+                            pointerEvents="none"
+                          />
+                        </g>
+                      );
+                    });
+                  })}
+
+                  <style>{`
+                    @keyframes draw {
+                      to { stroke-dashoffset: 0; }
+                    }
+                  `}</style>
+                </svg>
+
+                {/* X-axis labels */}
+                <div
+                  aria-hidden="true"
+                  className={`absolute bottom-0 left-0 right-0 flex text-xs text-fg-secondary ${
+                    points.length > 1 ? 'justify-between' : 'justify-center'
+                  }`}
+                >
+                  {points.map((d) => (
+                    <span key={d.date}>{shortDate(d.date)}</span>
+                  ))}
                 </div>
-              )}
+
+                {tooltip && (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute whitespace-nowrap rounded-md border border-line bg-surface px-2.5 py-1.5 text-xs shadow-lg"
+                    style={{
+                      left: `${(tooltip.x / svgWidth) * 100}%`,
+                      top: `${tooltip.y}%`,
+                      transform: 'translate(-50%, -110%)'
+                    }}
+                  >
+                    <div className="font-medium text-fg">
+                      {shortDate(tooltip.date)}
+                    </div>
+                    <div className="font-medium text-credit tabular-nums">
+                      Credit: {formatAmount(tooltip.credit)}
+                    </div>
+                    <div className="font-medium text-debit tabular-nums">
+                      Debit: {formatAmount(tooltip.debit)}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+
+            {/* Text alternative for screen readers */}
+            <table className="sr-only">
+              <caption>Credit and debit per day this week</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">Credit</th>
+                  <th scope="col">Debit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {points.map((d) => (
+                  <tr key={d.date}>
+                    <th scope="row">{shortDate(d.date)}</th>
+                    <td>{formatAmount(d.credit)}</td>
+                    <td>{formatAmount(d.debit)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
         )}
       </SkeletonWrapper>
 
       {/* Legend */}
-      <div className="flex justify-center space-x-4 mt-2">
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 bg-blue-600 rounded"></div>
-          <span className="text-xs text-gray-600">Credit</span>
+      <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-fg-secondary">
+        <div className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="h-3 w-3 rounded bg-credit" />
+          <span>Credit · payments received</span>
         </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 bg-rose-500 rounded"></div>
-          <span className="text-xs text-gray-600">Debit</span>
+        <div className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="h-3 w-3 rounded bg-debit" />
+          <span>Debit · udhaar &amp; advance given</span>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

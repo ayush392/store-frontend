@@ -33,7 +33,7 @@ function StoresPage() {
   return (
     <div className="space-y-4">
       <section className="overflow-hidden rounded-xl bg-surface shadow-sm">
-        <SectionHeader title="Stores" />
+        <SectionHeader title="Stores" as="h1" />
 
         <SkeletonWrapper<Account[]>
           isLoading={isLoading}

@@ -109,7 +109,7 @@ function StaffsPage() {
     <div className="space-y-4">
       <section className="overflow-hidden rounded-xl bg-surface shadow-sm">
         <div className="flex items-center justify-between border-b border-line py-2 pl-4 pr-2">
-          <h2 className="text-lg font-semibold text-fg">Staff</h2>
+          <h1 className="text-lg font-semibold text-fg">Staff</h1>
           {!!data?.length && (
             <Button
               variant="ghost"
