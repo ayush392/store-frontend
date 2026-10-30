@@ -14,13 +14,13 @@
   <script>
     // Apply the theme before the app loads to avoid a flash of the wrong theme.
     // Same rules as src/shared/theme.ts; keep them in sync.
-    // Developer-only for now: dark applies only when localStorage.theme is
-    // set to 'dark' by hand. System/light/dark selection ships after every
-    // screen is migrated.
+    // localStorage.theme is 'system' (default), 'light' or 'dark'.
     (function () {
       var theme = 'light';
       try {
-        if (localStorage.getItem('theme') === 'dark') theme = 'dark';
+        var pref = localStorage.getItem('theme');
+        if (pref === 'dark') theme = 'dark';
+        else if (pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
       } catch (e) {}
       var root = document.documentElement;
       root.setAttribute('data-theme', theme);

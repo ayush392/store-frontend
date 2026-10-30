@@ -1,11 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
-import { FiLogOut, FiUser } from 'react-icons/fi';
+import { FiLogOut, FiMonitor, FiMoon, FiSun, FiUser } from 'react-icons/fi';
 import { fetcher } from '../lib/fetcher';
+import { setThemePreference, useThemePreference } from '../lib/useTheme';
 import { formatEnum } from '../shared/format';
 import { queryKeys } from '../shared/queryKeys';
 import type { Me } from '../shared/types';
+import type { ThemePreference } from '../shared/theme';
 import { BottomSheet } from './BottomSheet';
 import { Button } from './Button';
 
@@ -78,10 +80,57 @@ const AccountMenu = ({ me }: { me: Me | undefined }) => {
         </p>
       )}
 
+      <ThemeControl />
+
       <Button variant="secondary" fullWidth onClick={logout}>
         <FiLogOut size={18} aria-hidden="true" />
         Log out
       </Button>
     </div>
+  );
+};
+
+const themeOptions: Array<{
+  value: ThemePreference;
+  label: string;
+  icon: typeof FiMonitor;
+}> = [
+  { value: 'system', label: 'System', icon: FiMonitor },
+  { value: 'light', label: 'Light', icon: FiSun },
+  { value: 'dark', label: 'Dark', icon: FiMoon }
+];
+
+const ThemeControl = () => {
+  const preference = useThemePreference();
+
+  return (
+    <fieldset>
+      <legend className="mb-1.5 text-sm font-medium text-fg-secondary">
+        Theme
+      </legend>
+      <div className="grid grid-cols-3 gap-1 rounded-lg bg-surface-muted p-1">
+        {themeOptions.map(({ value, label, icon: Icon }) => (
+          <label
+            key={value}
+            className={`flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-md text-sm font-medium has-focus-visible:outline-2 has-focus-visible:outline-focus ${
+              preference === value
+                ? 'bg-surface text-fg shadow-sm'
+                : 'text-fg-secondary active:bg-line'
+            }`}
+          >
+            <input
+              type="radio"
+              name="theme"
+              value={value}
+              checked={preference === value}
+              onChange={() => setThemePreference(value)}
+              className="sr-only"
+            />
+            <Icon size={16} aria-hidden="true" />
+            {label}
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 };

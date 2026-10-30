@@ -7,6 +7,7 @@ import {
 import { buttonClass } from '../components/buttonClass';
 import { FooterNav } from '../components/FooterNav';
 import { Header } from '../components/Header';
+import { useThemeSync } from '../lib/useTheme';
 
 export const Route = createRootRoute({
   component: RootLayoutComponent,
@@ -15,6 +16,8 @@ export const Route = createRootRoute({
 });
 
 function RootLayoutComponent() {
+  useThemeSync();
+
   // The login screen has no app chrome: no header, no navigation.
   const isLogin = useLocation({
     select: (location) => location.pathname.startsWith('/login')
