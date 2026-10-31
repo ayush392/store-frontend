@@ -11,13 +11,12 @@ export const PasswordInput = ({
   label,
   field,
   placeholder,
-  disabled = false,
-  error
+  disabled = false
 }: PasswordInputProps) => {
   const [show, setShow] = useState(false);
 
   return (
-    <FormField label={label} field={field} error={error}>
+    <FormField label={label} field={field}>
       {(control) => (
         <div className="relative">
           <input

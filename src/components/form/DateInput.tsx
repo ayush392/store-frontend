@@ -1,24 +1,20 @@
 import type { FormInputProps } from '../../shared/types';
 import { FormField } from './FormField';
 
-interface DateInputProps extends FormInputProps {
-  inputType?: 'date' | 'datetime-local';
-}
+type DateInputProps = FormInputProps;
 
 export const DateInput = ({
   label,
   field,
-  inputType = 'date',
-  disabled = false,
-  error
+  disabled = false
 }: DateInputProps) => {
   return (
-    <FormField label={label} field={field} error={error}>
+    <FormField label={label} field={field}>
       {(control) => (
         <input
           {...control}
           className={`${control.className} h-11`}
-          type={inputType}
+          type="date"
           value={String(field.state.value ?? '')}
           onChange={(e) => field.handleChange(e.target.value)}
           onBlur={field.handleBlur}

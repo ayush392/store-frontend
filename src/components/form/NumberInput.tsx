@@ -2,16 +2,12 @@ import { useState } from 'react';
 import type { FormInputProps } from '../../shared/types';
 import { FormField } from './FormField';
 
-interface NumberInputProps extends FormInputProps {
-  placeholder?: string;
-}
+type NumberInputProps = FormInputProps;
 
 export const NumberInput = ({
   label,
   field,
-  placeholder,
-  disabled = false,
-  error
+  disabled = false
 }: NumberInputProps) => {
   const resolvedValue = Number(field.state.value ?? 0);
   const [internalValue, setInternalValue] = useState(String(resolvedValue));
@@ -26,7 +22,7 @@ export const NumberInput = ({
   }
 
   return (
-    <FormField label={label} field={field} error={error}>
+    <FormField label={label} field={field}>
       {(control) => (
         <input
           {...control}
@@ -48,7 +44,6 @@ export const NumberInput = ({
             }
             field.handleBlur();
           }}
-          placeholder={placeholder}
           disabled={disabled}
           min={0}
         />

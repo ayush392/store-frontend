@@ -11,7 +11,6 @@ export type ControlProps = {
 type Props = {
   label: string;
   field: AnyFieldApi;
-  error?: string;
   children: (control: ControlProps) => ReactNode;
 };
 
@@ -23,12 +22,11 @@ const controlBase =
   'disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-60';
 
 // Shared label, error message and accessibility wiring for form inputs.
-export const FormField = ({ label, field, error, children }: Props) => {
+export const FormField = ({ label, field, children }: Props) => {
   const id = useId();
   const errorId = `${id}-error`;
   const { isTouched, errors } = field.state.meta;
-  const message =
-    error ?? (isTouched && errors.length > 0 ? errors[0]?.message : '');
+  const message = isTouched && errors.length > 0 ? errors[0]?.message : '';
 
   return (
     <div>

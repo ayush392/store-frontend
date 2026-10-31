@@ -4,21 +4,16 @@ import { FormField } from './FormField';
 
 interface SelectInputProps extends FormInputProps {
   options: string[];
-  includeEmptyOption?: boolean;
-  emptyOptionLabel?: string;
 }
 
 export const SelectInput = ({
   label,
   field,
   options,
-  includeEmptyOption = false,
-  emptyOptionLabel = '--Select--',
-  disabled = false,
-  error
+  disabled = false
 }: SelectInputProps) => {
   return (
-    <FormField label={label} field={field} error={error}>
+    <FormField label={label} field={field}>
       {(control) => (
         <div className="relative">
           <select
@@ -29,9 +24,6 @@ export const SelectInput = ({
             onBlur={field.handleBlur}
             disabled={disabled}
           >
-            {includeEmptyOption ? (
-              <option value="">{emptyOptionLabel}</option>
-            ) : null}
             {options.map((opt) => (
               <option key={opt} value={opt}>
                 {opt}

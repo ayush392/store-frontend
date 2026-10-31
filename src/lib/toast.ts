@@ -11,7 +11,3 @@ export const notifySuccess = (message: string) => {
 export const notifyError = (message: string) => {
   return toast.error(message, { ...defaultOptions });
 };
-
-export const notifyLoading = (message: string) => {
-  return toast.loading(message, { ...defaultOptions });
-};

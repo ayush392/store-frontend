@@ -13,13 +13,12 @@ export const TextInput = ({
   field,
   placeholder,
   disabled = false,
-  error,
   type = 'text',
   inputMode,
   autoComplete
 }: TextInputProps) => {
   return (
-    <FormField label={label} field={field} error={error}>
+    <FormField label={label} field={field}>
       {(control) => (
         <input
           {...control}

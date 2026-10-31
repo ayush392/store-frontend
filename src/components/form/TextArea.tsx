@@ -11,11 +11,10 @@ export const TextArea = ({
   field,
   rows = 3,
   placeholder,
-  disabled = false,
-  error
+  disabled = false
 }: TextAreaProps) => {
   return (
-    <FormField label={label} field={field} error={error}>
+    <FormField label={label} field={field}>
       {(control) => (
         <textarea
           {...control}
