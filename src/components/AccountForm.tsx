@@ -14,6 +14,7 @@ import type { Account } from '../shared/types';
 import { accountAffectedKeys } from '../shared/queryKeys';
 import { getChangedFields } from '../shared/changedFields';
 import { Button } from './Button';
+import { ContactPickerButton } from './ContactPickerButton';
 
 type Props = {
   mode: 'create' | 'edit';
@@ -104,6 +105,15 @@ export const AccountForm = ({
         form.handleSubmit();
       }}
     >
+      {mode === 'create' && (
+        <ContactPickerButton
+          onPick={({ name, phone }) => {
+            // Only non-empty values arrive here; the user can still edit both.
+            if (name) form.setFieldValue('name', name);
+            if (phone) form.setFieldValue('phone', phone);
+          }}
+        />
+      )}
       <Field name="name">
         {(field) => (
           <TextInput label="Name" field={field} placeholder="Enter name" />
