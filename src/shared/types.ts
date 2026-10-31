@@ -19,7 +19,7 @@ export type Me = {
 };
 
 // A bill photo attached to a transaction (Cloudinary).
-export type BillImage = { url: string; publicId: string };
+type BillImage = { url: string; publicId: string };
 
 export type Account = {
   _id: string;
