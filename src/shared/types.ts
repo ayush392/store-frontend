@@ -9,8 +9,6 @@ export interface FormInputProps {
   label: string;
   field: AnyFieldApi;
   disabled?: boolean;
-  error?: string;
-  classNames?: string;
 }
 
 // GET /auth/me (the backend also sends isActive, which the app doesn't use).
@@ -19,6 +17,9 @@ export type Me = {
   phone: string;
   role: UserRole;
 };
+
+// A bill photo attached to a transaction (Cloudinary).
+export type BillImage = { url: string; publicId: string };
 
 export type Account = {
   _id: string;
@@ -46,7 +47,7 @@ export type RecentTrans = {
   amountChange: number;
   date: string; // ISO date
   account: Account;
-  images?: [{ url: string; publicId: string }];
+  images?: BillImage[];
 };
 
 type Point = {
@@ -81,7 +82,7 @@ export type Transactions = {
   amountChange: number;
   date: string;
   note: string;
-  images?: [{ url: string; publicId: string }];
+  images?: BillImage[];
 };
 
 export type UserDetails = {

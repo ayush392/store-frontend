@@ -6,19 +6,15 @@ import { notifyError, notifySuccess } from '../lib/toast';
 import { BottomSheet } from './BottomSheet';
 import { Button } from './Button';
 import { UpdateAttendance } from './UpdateAttendance';
-import type { AttendanceType } from '../shared/schemas/staff.schema';
+import type {
+  Attendance,
+  AttendanceType
+} from '../shared/schemas/staff.schema';
 import { queryKeys } from '../shared/queryKeys';
 import {
   attendanceStatus,
   unmarkedAttendanceClassName
 } from '../shared/attendance';
-
-type Attendance = {
-  accountId: string;
-  employmentId: string;
-  date: string; // ISO string
-  status: AttendanceType;
-};
 
 type Props = {
   accountId: string;
