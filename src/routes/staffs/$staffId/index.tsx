@@ -14,6 +14,7 @@ import { ProfileCardSkeleton } from '../../../components/placeholders/ProfileSke
 import { SkeletonWrapper } from '../../../components/placeholders/SkeletonWrapper';
 import { FloatingButton } from '../../../components/FloatingButton';
 import { ErrorState } from '../../../components/ErrorState';
+import { PullToRefresh } from '../../../components/PullToRefresh';
 
 const tabs = [
   { id: 'transactions', label: 'Transactions', icon: FiList },
@@ -35,7 +36,9 @@ function StaffDetailsPage() {
     queryFn: () => fetcher<UserDetails>(`/account/${staffId}/`)
   });
 
-  if (error) {
+  // Keep showing cached data if a refresh fails; the error screen is only
+  // for when nothing has loaded yet.
+  if (error && !data) {
     return (
       <PageLayout title={title}>
         <ErrorState
@@ -49,6 +52,12 @@ function StaffDetailsPage() {
 
   return (
     <PageLayout title={title}>
+      <PullToRefresh
+        queryKeys={[
+          queryKeys.accountDetail('STAFF', staffId),
+          queryKeys.staffCalendars(staffId)
+        ]}
+      />
       <SkeletonWrapper<UserDetails>
         isLoading={isLoading}
         skeleton={<ProfileCardSkeleton />}

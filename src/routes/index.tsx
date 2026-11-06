@@ -16,6 +16,7 @@ import { ListSkeleton } from '../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../components/placeholders/SkeletonWrapper';
 import { TransactionImageViewer } from '../components/TransactionImageViewer';
 import { ErrorState } from '../components/ErrorState';
+import { PullToRefresh } from '../components/PullToRefresh';
 import { accountDetailLink } from '../shared/accountLinks';
 
 export const Route = createFileRoute('/')({
@@ -35,7 +36,9 @@ function HomePage() {
     staleTime: 5 * 60 * 1000
   });
 
-  if (error) {
+  // Keep showing cached data if a refresh fails; the error screen is only
+  // for when nothing has loaded yet.
+  if (error && !data) {
     return (
       <ErrorState
         error={error}
@@ -47,6 +50,7 @@ function HomePage() {
 
   return (
     <div className="space-y-4">
+      <PullToRefresh queryKeys={[queryKeys.recent(), queryKeys.graph()]} />
       <h1 className="sr-only">Home</h1>
 
       <nav aria-label="Quick add" className="grid grid-cols-3 gap-3">

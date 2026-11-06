@@ -28,6 +28,8 @@ export const queryKeys = {
     ['calendar', accountId, month, year] as const,
   // Prefix of every calendar query (all staff, all months).
   allCalendars: () => ['calendar'] as const,
+  // Prefix of one staff member's calendar queries (all months).
+  staffCalendars: (accountId: string) => ['calendar', accountId] as const,
   me: () => ['me'] as const
 };
 

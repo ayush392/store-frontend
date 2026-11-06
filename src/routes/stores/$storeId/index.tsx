@@ -12,6 +12,7 @@ import { ProfileCardSkeleton } from '../../../components/placeholders/ProfileSke
 import { SkeletonWrapper } from '../../../components/placeholders/SkeletonWrapper';
 import { FloatingButton } from '../../../components/FloatingButton';
 import { ErrorState } from '../../../components/ErrorState';
+import { PullToRefresh } from '../../../components/PullToRefresh';
 
 export const Route = createFileRoute('/stores/$storeId/')({
   component: StoreDetailsPage
@@ -26,7 +27,9 @@ function StoreDetailsPage() {
     queryFn: () => fetcher<UserDetails>(`/account/${storeId}/`)
   });
 
-  if (error) {
+  // Keep showing cached data if a refresh fails; the error screen is only
+  // for when nothing has loaded yet.
+  if (error && !data) {
     return (
       <PageLayout title={title}>
         <ErrorState
@@ -40,6 +43,7 @@ function StoreDetailsPage() {
 
   return (
     <PageLayout title={title}>
+      <PullToRefresh queryKeys={[queryKeys.accountDetail('STORE', storeId)]} />
       <SkeletonWrapper<UserDetails>
         isLoading={isLoading}
         skeleton={<ProfileCardSkeleton />}

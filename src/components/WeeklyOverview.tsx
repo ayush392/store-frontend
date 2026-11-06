@@ -60,7 +60,8 @@ export default function WeeklyOverview() {
 
   const yTicks = ticks.map((tick) => tick.toLocaleString('en-IN'));
 
-  if (error) {
+  // Keep the last loaded chart if a refresh fails.
+  if (error && !data) {
     return (
       <ErrorState
         error={error}

@@ -9,6 +9,7 @@ import { ListSkeleton } from '../../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../../components/placeholders/SkeletonWrapper';
 import { FloatingButton } from '../../components/FloatingButton';
 import { ErrorState } from '../../components/ErrorState';
+import { PullToRefresh } from '../../components/PullToRefresh';
 
 export const Route = createFileRoute('/stores/')({
   component: StoresPage
@@ -20,7 +21,9 @@ function StoresPage() {
     queryFn: () => fetcher<Account[]>('/account?accountType=STORE')
   });
 
-  if (error) {
+  // Keep showing cached data if a refresh fails; the error screen is only
+  // for when nothing has loaded yet.
+  if (error && !data) {
     return (
       <ErrorState
         error={error}
@@ -32,6 +35,7 @@ function StoresPage() {
 
   return (
     <div className="space-y-4">
+      <PullToRefresh queryKeys={[queryKeys.accountList('STORE')]} />
       <section className="overflow-hidden rounded-xl bg-surface shadow-sm">
         <SectionHeader title="Stores" as="h1" />
 

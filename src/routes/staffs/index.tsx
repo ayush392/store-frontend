@@ -11,6 +11,7 @@ import {
 } from '../../shared/attendance';
 import { accountDetailLink, newTransactionLink } from '../../shared/accountLinks';
 import { ErrorState } from '../../components/ErrorState';
+import { PullToRefresh } from '../../components/PullToRefresh';
 import { Button } from '../../components/Button';
 import { buttonClass } from '../../components/buttonClass';
 import type { Staff } from '../../shared/types';
@@ -92,7 +93,9 @@ function StaffsPage() {
     if (staffData && staffData.length > 0) mutate(staffData);
   };
 
-  if (error) {
+  // Keep showing cached data if a refresh fails; the error screen is only
+  // for when nothing has loaded yet.
+  if (error && !data) {
     return (
       <ErrorState
         error={error}
@@ -107,6 +110,7 @@ function StaffsPage() {
 
   return (
     <div className="space-y-4">
+      <PullToRefresh queryKeys={[queryKeys.accountList('STAFF')]} />
       <section className="overflow-hidden rounded-xl bg-surface shadow-sm">
         <div className="flex items-center justify-between border-b border-line py-2 pl-4 pr-2">
           <h1 className="text-lg font-semibold text-fg">Staff</h1>

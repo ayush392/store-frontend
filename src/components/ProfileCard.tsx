@@ -86,7 +86,7 @@ const Row = ({
 }) => (
   <div className="flex justify-between gap-4 py-2.5">
     <dt className="shrink-0 text-fg-secondary">{label}</dt>
-    <dd className="min-w-0 text-right font-medium break-words text-fg">
+    <dd className="min-w-0 text-right font-medium wrap-break-word text-fg">
       {children}
     </dd>
   </div>
