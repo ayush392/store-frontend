@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom/client';
 import { Toaster } from 'react-hot-toast';
 import './index.css';
 import { routeTree } from './routeTree.gen';
+import { Analytics } from '@vercel/analytics/react';
 
 // Create a new router instance
 const router = createRouter({ routeTree });
@@ -40,14 +41,21 @@ if (!rootElement.innerHTML) {
               border: '1px solid var(--line)'
             },
             success: {
-              iconTheme: { primary: 'var(--success)', secondary: 'var(--surface)' }
+              iconTheme: {
+                primary: 'var(--success)',
+                secondary: 'var(--surface)'
+              }
             },
             error: {
-              iconTheme: { primary: 'var(--error)', secondary: 'var(--surface)' }
+              iconTheme: {
+                primary: 'var(--error)',
+                secondary: 'var(--surface)'
+              }
             }
           }}
         />
         <RouterProvider router={router} />
+        <Analytics />
       </QueryClientProvider>
     </React.StrictMode>
   );
