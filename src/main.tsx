@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import './index.css';
 import { routeTree } from './routeTree.gen';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // Create a new router instance
 const router = createRouter({ routeTree });
@@ -56,6 +57,7 @@ if (!rootElement.innerHTML) {
         />
         <RouterProvider router={router} />
         <Analytics />
+        <SpeedInsights />
       </QueryClientProvider>
     </React.StrictMode>
   );
