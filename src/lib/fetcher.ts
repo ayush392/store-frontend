@@ -11,8 +11,6 @@ export const fetcher = async <T>(
   const API_URL = import.meta.env.VITE_API_URL;
   const url = API_URL + endpoint;
 
-  console.log('Hit endpint: ' + endpoint);
-
   const options: RequestInit = {
     method,
     headers: {
@@ -40,7 +38,6 @@ export const fetcher = async <T>(
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    console.log({ errorData });
     if (errorData.code === 'UNAUTHORIZED') {
       redirectToLogin();
     }
@@ -48,6 +45,5 @@ export const fetcher = async <T>(
   }
 
   const json = await res.json();
-  console.log({ json });
   return json.data as T;
 };

@@ -7,11 +7,16 @@ type Props = {
   name: string;
 };
 
+// Colors follow the balance effect: UDHAAR/ADVANCE raise it (debit),
+// PAYMENT lowers it (credit), SALARY doesn't change it (neutral).
 const getMessageColor = (type: TransactionType) => {
   if (type === 'UDHAAR' || type === 'ADVANCE') {
-    return 'border-red-100 bg-red-50 text-red-700';
+    return 'border-debit/20 bg-debit-soft text-debit';
   }
-  return 'border-blue-100 bg-blue-50 text-blue-700';
+  if (type === 'PAYMENT') {
+    return 'border-credit/20 bg-credit-soft text-credit';
+  }
+  return 'border-line bg-surface-muted text-fg-secondary';
 };
 
 const getMessage = (type: TransactionType, amount: number, name: string) => {
@@ -38,10 +43,11 @@ export const TransactionMessage = ({ amount, type, name }: Props) => {
     return null;
   }
   return (
-    <div
+    <p
+      aria-live="polite"
       className={`rounded-lg border px-3 py-2 font-medium ${getMessageColor(type)}`}
     >
       {getMessage(type, amount, name)}
-    </div>
+    </p>
   );
 };

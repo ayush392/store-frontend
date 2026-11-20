@@ -1,4 +1,5 @@
 import type { FormInputProps } from '../../shared/types';
+import { FormField } from './FormField';
 
 interface TextAreaProps extends FormInputProps {
   rows?: number;
@@ -10,31 +11,22 @@ export const TextArea = ({
   field,
   rows = 3,
   placeholder,
-  disabled = false,
-  error
+  disabled = false
 }: TextAreaProps) => {
-  const { isTouched, errors } = field.state.meta;
-  const resolvedValue = String(field.state.value ?? '');
-  const resolvedError =
-    error ?? (isTouched && errors.length > 0 ? errors[0]?.message : '');
-
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <textarea
-        value={resolvedValue}
-        onChange={(e) => field.handleChange(e.target.value)}
-        onBlur={field.handleBlur}
-        rows={rows}
-        disabled={disabled}
-        placeholder={placeholder}
-        className={`block w-full border px-3 py-2 rounded-lg text-sm ${
-          disabled ? 'bg-gray-100' : 'border-gray-300'
-        } ${resolvedError ? 'border-red-500' : ''}`}
-      />
-      {resolvedError && <p className="text-red-500 text-xs">{resolvedError}</p>}
-    </div>
+    <FormField label={label} field={field}>
+      {(control) => (
+        <textarea
+          {...control}
+          className={`${control.className} py-2.5`}
+          value={String(field.state.value ?? '')}
+          onChange={(e) => field.handleChange(e.target.value)}
+          onBlur={field.handleBlur}
+          rows={rows}
+          disabled={disabled}
+          placeholder={placeholder}
+        />
+      )}
+    </FormField>
   );
 };

@@ -6,10 +6,13 @@ import { SectionHeader } from '../../../components/SectionHeader';
 import { TransactionList } from '../../../components/TransactionList';
 import { fetcher } from '../../../lib/fetcher';
 import type { Transactions, UserDetails } from '../../../shared/types';
+import { queryKeys } from '../../../shared/queryKeys';
 import { ListSkeleton } from '../../../components/placeholders/ListSkeleton';
 import { ProfileCardSkeleton } from '../../../components/placeholders/ProfileSkeleton';
 import { SkeletonWrapper } from '../../../components/placeholders/SkeletonWrapper';
 import { FloatingButton } from '../../../components/FloatingButton';
+import { ErrorState } from '../../../components/ErrorState';
+import { PullToRefresh } from '../../../components/PullToRefresh';
 
 export const Route = createFileRoute('/customers/$customerId/')({
   component: CustomerDetailsPage
@@ -19,21 +22,28 @@ function CustomerDetailsPage() {
   const { customerId } = Route.useParams();
   const title = 'Customer Details';
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['customer', customerId],
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: queryKeys.accountDetail('CUSTOMER', customerId),
     queryFn: () => fetcher<UserDetails>(`/account/${customerId}/`)
   });
 
-  if (error) {
+  // Keep showing cached data if a refresh fails; the error screen is only
+  // for when nothing has loaded yet.
+  if (error && !data) {
     return (
       <PageLayout title={title}>
-        <div>{error.message}</div>
+        <ErrorState
+          error={error}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </PageLayout>
     );
   }
 
   return (
     <PageLayout title={title}>
+      <PullToRefresh queryKeys={[queryKeys.accountDetail('CUSTOMER', customerId)]} />
       <SkeletonWrapper<UserDetails>
         isLoading={isLoading}
         skeleton={<ProfileCardSkeleton />}
@@ -44,22 +54,22 @@ function CustomerDetailsPage() {
         )}
       </SkeletonWrapper>
 
-      <div className="bg-white rounded-lg shadow-sm">
-        <SectionHeader title="Transactions" filterOptions={['all']} />
+      <section className="overflow-hidden rounded-xl bg-surface shadow-sm">
+        <SectionHeader title="Transactions" />
         <SkeletonWrapper<Transactions[]>
           isLoading={isLoading}
           skeleton={<ListSkeleton />}
           data={data?.transactions}
-          message="No transactions found"
+          message="No transactions yet"
         >
           {data && (
             <TransactionList
               transactions={data.transactions}
-              type="customers"
+              accountType="CUSTOMER"
             />
           )}
         </SkeletonWrapper>
-      </div>
+      </section>
 
       <FloatingButton link={`./transactions/new`} label="Pay" />
     </PageLayout>

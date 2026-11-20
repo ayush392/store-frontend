@@ -14,7 +14,6 @@ const getCloudinarySignature = async (accountId: ObjectId) => {
   const data = await fetcher<Sign>('/cloudinary/signature', 'POST', {
     accountId
   });
-  console.log({ signature: data });
   return data;
 };
 

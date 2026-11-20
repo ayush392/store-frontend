@@ -11,9 +11,13 @@ import {
 } from '../shared/format';
 import { CustomerIcon, StaffIcon, StoreIcon } from '../shared/icons';
 import type { RecentTrans } from '../shared/types';
+import { queryKeys } from '../shared/queryKeys';
 import { ListSkeleton } from '../components/placeholders/ListSkeleton';
 import { SkeletonWrapper } from '../components/placeholders/SkeletonWrapper';
 import { TransactionImageViewer } from '../components/TransactionImageViewer';
+import { ErrorState } from '../components/ErrorState';
+import { PullToRefresh } from '../components/PullToRefresh';
+import { accountDetailLink } from '../shared/accountLinks';
 
 export const Route = createFileRoute('/')({
   component: HomePage
@@ -23,100 +27,108 @@ const actions = [
   { key: 'customers', label: 'Add Customer', icon: CustomerIcon },
   { key: 'staffs', label: 'Add Staff', icon: StaffIcon },
   { key: 'stores', label: 'Add Store', icon: StoreIcon }
-  // { key: 'transactions', label: 'Add Transaction', icon: FiDollarSign }
 ] as const;
 
 function HomePage() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['recent'],
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: queryKeys.recent(),
     queryFn: () => fetcher<RecentTrans[]>('/transaction/recent'),
     staleTime: 5 * 60 * 1000
   });
 
-  const getNavigationLink = (trans: RecentTrans) => {
-    const { accountType, _id } = trans.account;
-    const type = accountType.toLowerCase() + 's';
-    return `/${type}/${_id}`;
-  };
-
-  if (error) {
-    console.log(error);
-    return <div>{error.message}</div>;
+  // Keep showing cached data if a refresh fails; the error screen is only
+  // for when nothing has loaded yet.
+  if (error && !data) {
+    return (
+      <ErrorState
+        error={error}
+        onRetry={() => refetch()}
+        isRetrying={isFetching}
+      />
+    );
   }
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <PullToRefresh queryKeys={[queryKeys.recent(), queryKeys.graph()]} />
+      <h1 className="sr-only">Home</h1>
+
+      <nav aria-label="Quick add" className="grid grid-cols-3 gap-3">
         {actions.map(({ key, label, icon: Icon }) => (
           <Link
             key={key}
             to={`/${key}/new`}
-            className="bg-white text-gray-700 p-4 rounded-lg flex items-center space-x-3 shadow-sm border border-gray-200 cursor-pointer"
+            className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl bg-surface px-2 py-3 text-center shadow-sm active:bg-surface-muted"
           >
-            <Icon size={20} className="text-blue-600" />
-            <span className="font-medium">{label}</span>
+            <Icon size={22} className="text-primary" aria-hidden="true" />
+            <span className="text-sm font-medium leading-tight text-fg">
+              {label}
+            </span>
           </Link>
         ))}
-      </div>
+      </nav>
 
       <WeeklyOverview />
 
-      <div className="bg-white rounded-lg shadow-sm">
-        <SectionHeader
-          title="Recent Transactions"
-          filterOptions={['all', 'staff', 'customer', 'store']}
-        />
+      {/* The backend's /transaction/recent returns today's transactions. */}
+      <section className="overflow-hidden rounded-xl bg-surface shadow-sm">
+        <SectionHeader title="Today's transactions" />
 
         <SkeletonWrapper<RecentTrans[]>
           isLoading={isLoading}
           skeleton={<ListSkeleton />}
           data={data}
-          message="No Recent Transactions"
+          message="No transactions today"
         >
-          <div className="divide-y divide-gray-200">
-            {data?.map((transaction, index) => (
-              <div key={index} className="p-4 active:bg-gray-50 transition">
-                <div className="flex items-center justify-between ">
-                  <Link
-                    className="flex items-center gap-3 flex-1"
-                    to={getNavigationLink(transaction)}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-800 truncate">
-                        {transaction.account.name}
-                      </div>
+          <ul className="divide-y divide-line">
+            {data?.map((transaction) => (
+              <li key={transaction._id}>
+                <Link
+                  {...accountDetailLink(
+                    transaction.account.accountType,
+                    transaction.account._id
+                  )}
+                  className="flex items-center gap-3 px-4 py-3 active:bg-surface-muted"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-fg">
+                      {transaction.account.name}
+                    </p>
+                    <p className="flex items-center gap-2 text-sm text-fg-secondary">
+                      <span>{formatEnum(transaction.account.accountType)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="truncate tabular-nums">
+                        {transaction.account.phone}
+                      </span>
+                    </p>
+                  </div>
 
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <span className="capitalize">
-                          {formatEnum(transaction.account.accountType)}
-                        </span>
-                        <span className="text-gray-300">•</span>
-                        <span className="truncate">
-                          {transaction.account.phone}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                  <div className="text-right ml-2">
-                    <div
-                      className={`font-semibold ${getAmountColor(
+                  <div className="shrink-0 text-right">
+                    <p
+                      className={`font-semibold tabular-nums ${getAmountColor(
                         transaction.transactionType
                       )}`}
                     >
                       {getAmountSymbol(transaction.amountChange)}
                       {formatAmount(transaction.amount)}
-                    </div>
-                    <div className="text-sm text-gray-500 capitalize">
+                    </p>
+                    <p className="text-sm text-fg-secondary">
                       {formatEnum(transaction.transactionType)}
-                    </div>
+                    </p>
                   </div>
-                </div>
-                <TransactionImageViewer transaction={transaction} />
-              </div>
+                </Link>
+
+                {/* Bill thumbnails are buttons, so they sit outside the link. */}
+                {transaction.images?.length ? (
+                  <div className="-mt-1 px-4 pb-3">
+                    <TransactionImageViewer transaction={transaction} />
+                  </div>
+                ) : null}
+              </li>
             ))}
-          </div>
+          </ul>
         </SkeletonWrapper>
-      </div>
+      </section>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useForm, useStore } from '@tanstack/react-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetcher } from '../lib/fetcher';
 import { notifyError, notifySuccess } from '../lib/toast';
 import { DateInput } from './form/DateInput';
@@ -11,25 +11,40 @@ import {
   type CreateTransaction,
   type UpdateTransaction,
   CreateTransactionSchema,
-  TransactionTypeEnum
+  TransactionTypeEnum,
+  getTransactionTypeOptions
 } from '../shared/schemas/transaction.schema';
-import type { Transactions } from '../shared/types';
+import type { AccountType } from '../shared/schemas/account.schema';
+import type { Transactions, UserDetails } from '../shared/types';
 import z from 'zod';
 import { UploadBills, type BillFile } from './UploadBills';
 import { useState } from 'react';
 import { cloudinarySignedUpload } from '../shared/utils/cloudinary';
+import { queryKeys, transactionAffectedKeys } from '../shared/queryKeys';
+import { getChangedFields } from '../shared/changedFields';
+import { TransactionImageViewer } from './TransactionImageViewer';
+import { Button } from './Button';
 
 type Props = {
   name: string;
   accountId: string;
+  accountType: AccountType;
   transaction?: Transactions;
+  // Called after the transaction is saved (the page navigates away).
+  onSaved: () => void;
 };
 
-export const TransactionForm = ({ name, accountId, transaction }: Props) => {
+export const TransactionForm = ({
+  name,
+  accountId,
+  accountType,
+  transaction,
+  onSaved
+}: Props) => {
   const [bills, setBills] = useState<BillFile[]>([]);
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = useMutation({
+  const { mutateAsync, isPending } = useMutation({
     mutationFn: async (formData: CreateTransaction | UpdateTransaction) => {
       if (transaction) {
         return fetcher(`/transaction/${transaction._id}`, 'PATCH', formData);
@@ -41,9 +56,14 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
         ? 'Transaction updated successfully'
         : 'Transaction created for ' + name;
       notifySuccess(message);
-      queryClient.invalidateQueries({ queryKey: ['staff', accountId] });
-      queryClient.invalidateQueries({ queryKey: ['customer', accountId] });
-      queryClient.invalidateQueries({ queryKey: ['store', accountId] });
+      for (const queryKey of transactionAffectedKeys(accountType, accountId)) {
+        queryClient.invalidateQueries({ queryKey });
+      }
+      if (transaction) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.transactionBasic(transaction._id)
+        });
+      }
     },
     onError: (error) => {
       notifyError(error.message);
@@ -63,37 +83,53 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
     },
     onSubmit: async ({ value, formApi }) => {
       const defaultValues = formApi.options.defaultValues || {};
+
       if (transaction) {
-        const changedValues: UpdateTransaction = { reason: '' };
-
-        const keys = Object.keys(defaultValues) as Array<
-          keyof typeof defaultValues
-        >;
-
-        for (const key of keys) {
-          if (value[key] !== defaultValues[key]) {
-            changedValues[key as keyof UpdateTransaction] = value[key];
-          }
-        }
+        // `reason` is required for every edit, so it doesn't count as a change.
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { reason: _reason, ...changedValues } = getChangedFields(
+          value,
+          defaultValues
+        );
 
         if (Object.keys(changedValues).length === 0) {
           notifyError('Nothing to update');
           return;
         }
 
-        mutate(changedValues);
+        try {
+          await mutateAsync({
+            ...changedValues,
+            reason: value.reason ?? ''
+          } as UpdateTransaction);
+        } catch {
+          // The error toast is shown by onError; keep the entered values.
+          return;
+        }
+        onSaved();
         return;
       }
 
-      const uploadImages = await Promise.all(
-        bills.map((bill) => cloudinarySignedUpload(bill.file, accountId))
-      );
+      let uploadImages: Awaited<ReturnType<typeof cloudinarySignedUpload>>[];
+      try {
+        uploadImages = await Promise.all(
+          bills.map((bill) => cloudinarySignedUpload(bill.file, accountId))
+        );
+      } catch {
+        notifyError('Bill upload failed. Your entries are kept, please retry.');
+        return;
+      }
 
-      console.log({ uploadImages });
+      try {
+        await mutateAsync({ ...value, images: uploadImages });
+      } catch {
+        // The error toast is shown by onError; keep the entered values.
+        return;
+      }
 
-      setBills([]);
-      mutate({ ...value, images: uploadImages });
-      form.reset();
+      // Leave the form only after the transaction was saved; on any failure
+      // above the entered values and bills stay.
+      onSaved();
     },
     validators: {
       onSubmit: transaction
@@ -115,6 +151,7 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
       className="space-y-4"
       onSubmit={(e) => {
         e.preventDefault();
+        if (form.state.isSubmitting || isPending) return; // no double submit
         form.handleSubmit();
       }}
     >
@@ -125,7 +162,12 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
             <SelectInput
               label="Type"
               field={field}
-              options={TransactionTypeEnum.options}
+              // Edit mode: type is fixed, so show the full list for display.
+              options={
+                transaction
+                  ? TransactionTypeEnum.options
+                  : getTransactionTypeOptions(accountType)
+              }
               disabled={!!transaction}
             />
           )}
@@ -146,7 +188,15 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
         )}
       </Field>
 
-      <UploadBills bills={bills} setBills={setBills} />
+      {transaction ? (
+        <ExistingBills
+          accountId={accountId}
+          accountType={accountType}
+          transactionId={transaction._id}
+        />
+      ) : (
+        <UploadBills bills={bills} setBills={setBills} />
+      )}
 
       {transaction && (
         <Field name="reason">
@@ -161,10 +211,10 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
         </Field>
       )}
 
-      <button
-        disabled={isPending || isSubmitting || !isValid}
+      <Button
         type="submit"
-        className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-60 active:bg-green-700"
+        fullWidth
+        disabled={isPending || isSubmitting || !isValid}
       >
         {transaction
           ? isPending || isSubmitting
@@ -173,7 +223,58 @@ export const TransactionForm = ({ name, accountId, transaction }: Props) => {
           : isPending || isSubmitting
             ? 'Saving...'
             : 'Save'}
-      </button>
+      </Button>
     </form>
   );
 };
+
+type ExistingBillsProps = {
+  accountId: string;
+  accountType: AccountType;
+  transactionId: string;
+};
+
+// Read-only view of the bills already attached to a transaction. Editing never
+// sends `images`, so existing bills are always kept on the server. Thumbnails
+// are shown only from freshly fetched data that matches this transaction.
+function ExistingBills({
+  accountId,
+  accountType,
+  transactionId
+}: ExistingBillsProps) {
+  const { data, isSuccess, isFetching } = useQuery({
+    queryKey: queryKeys.accountDetail(accountType, accountId),
+    queryFn: () => fetcher<UserDetails>(`/account/${accountId}/`),
+    refetchOnMount: 'always'
+  });
+
+  const match =
+    isSuccess && !isFetching
+      ? data.transactions.find(
+          (t) => t._id === transactionId && t.accountId === accountId
+        )
+      : undefined;
+
+  let content;
+  if (isFetching) {
+    content = <p className="text-sm text-fg-muted">Loading bills...</p>;
+  } else if (!match) {
+    content = <p className="text-sm text-fg-muted">Existing bills are kept.</p>;
+  } else if (!match.images?.length) {
+    content = <p className="text-sm text-fg-muted">No bills attached.</p>;
+  } else {
+    content = <TransactionImageViewer transaction={match} />;
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="block text-sm font-medium text-fg-secondary">
+        Bills / Receipts
+      </div>
+      {content}
+      <p className="text-xs text-fg-muted">
+        Bills can't be changed when editing a transaction.
+      </p>
+    </div>
+  );
+}

@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { FiChevronLeft, FiChevronRight, FiX } from 'react-icons/fi';
 import type { RecentTrans, Transactions } from '../shared/types';
-import { FiX } from 'react-icons/fi';
-import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 
 const getImageUrl = (url: string, view: 'list' | 'thumbnail' | 'zoom') => {
   const optionsMap = {
@@ -21,21 +20,36 @@ type Props = {
 
 export const TransactionImageViewer = ({ transaction }: Props) => {
   const images = transaction.images ?? [];
+  const count = images.length;
   const [viewerOpen, setViewerOpen] = useState(false);
   const [index, setIndex] = useState(0);
+  const viewerRef = useRef<HTMLDivElement>(null);
 
+  // While open: lock page scroll, move focus into the viewer, close on Escape,
+  // step with the arrow keys, and give focus back to the thumbnail on close.
   useEffect(() => {
     if (!viewerOpen) return;
 
-    const prev = document.body.style.overflow;
+    const opener = document.activeElement as HTMLElement | null;
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    viewerRef.current?.focus({ preventScroll: true });
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setViewerOpen(false);
+      if (e.key === 'ArrowLeft') setIndex((i) => Math.max(0, i - 1));
+      if (e.key === 'ArrowRight') setIndex((i) => Math.min(count - 1, i + 1));
+    };
+    document.addEventListener('keydown', onKeyDown);
 
     return () => {
-      document.body.style.overflow = prev;
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+      if (opener && document.contains(opener)) opener.focus();
     };
-  }, [viewerOpen]);
+  }, [viewerOpen, count]);
 
-  if (images.length === 0) return null;
+  if (count === 0) return null;
 
   const openViewer = (i: number) => {
     setIndex(i);
@@ -47,24 +61,29 @@ export const TransactionImageViewer = ({ transaction }: Props) => {
   };
 
   const next = () => {
-    setIndex((i) => Math.min(images.length - 1, i + 1));
+    setIndex((i) => Math.min(count - 1, i + 1));
   };
+
+  const navButton =
+    'absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white active:bg-black/70 disabled:opacity-30';
 
   return (
     <>
       {/* THUMBNAILS (LIST VIEW) */}
-      <div className="flex gap-2 mt-2 flex-wrap">
+      <div className="mt-2 flex flex-wrap gap-2">
         {images.map((img, i) => (
           <button
             key={img.publicId ?? i}
+            type="button"
             onClick={() => openViewer(i)}
-            className="active:scale-95 transition"
+            aria-label={`View bill ${i + 1} of ${count}`}
+            className="rounded-md active:scale-95"
           >
             <img
               src={getImageUrl(img.url, 'list')}
-              alt={`bill-${i + 1}`}
+              alt=""
               loading="lazy"
-              className="w-12 h-12 rounded-md object-cover border border-gray-200"
+              className="h-12 w-12 rounded-md border border-line object-cover"
             />
           </button>
         ))}
@@ -72,64 +91,79 @@ export const TransactionImageViewer = ({ transaction }: Props) => {
 
       {/* FULLSCREEN VIEWER */}
       {viewerOpen && (
-        <div className="fixed left-0 right-0 top-[64px] bottom-[64px] z-[100] flex flex-col bg-black/60 backdrop-blur-md text-white">
+        <div
+          ref={viewerRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Bill viewer"
+          tabIndex={-1}
+          className="fixed inset-0 z-60 flex flex-col bg-black/90 text-white outline-none backdrop-blur-md"
+        >
           {/* TOP BAR */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-            <div className="w-6" />
-            <div className="text-sm opacity-80">
-              {index + 1} / {images.length}
+          <div className="flex items-center justify-between border-b border-white/10 pb-1 pl-4 pr-2 pt-[calc(0.25rem+env(safe-area-inset-top))]">
+            <div className="text-sm" aria-live="polite">
+              {index + 1} / {count}
             </div>
-            <button onClick={() => setViewerOpen(false)} className="text-2xl">
-              <FiX />
+            <button
+              type="button"
+              onClick={() => setViewerOpen(false)}
+              aria-label="Close viewer"
+              className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
+            >
+              <FiX size={24} aria-hidden="true" />
             </button>
           </div>
 
           {/* IMAGE AREA */}
-          <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+          <div className="relative flex flex-1 items-center justify-center overflow-hidden">
             <button
+              type="button"
               onClick={prev}
               disabled={index === 0}
-              className="absolute left-0 flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-white disabled:opacity-20"
+              aria-label="Previous bill"
+              className={`${navButton} left-2`}
             >
-              <HiChevronLeft size={24} />
+              <FiChevronLeft size={24} aria-hidden="true" />
             </button>
 
             <img
               src={getImageUrl(images[index].url, 'zoom')}
-              className="max-h-full max-w-full object-contain select-none"
-              alt=""
+              className="max-h-full max-w-full select-none object-contain"
+              alt={`Bill ${index + 1} of ${count}`}
             />
 
             <button
+              type="button"
               onClick={next}
-              disabled={index === images.length - 1}
-              className="absolute right-0 flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-white disabled:opacity-20"
+              disabled={index === count - 1}
+              aria-label="Next bill"
+              className={`${navButton} right-2`}
             >
-              <HiChevronRight size={24} />
+              <FiChevronRight size={24} aria-hidden="true" />
             </button>
           </div>
 
           {/* THUMB STRIP */}
-          <div className="h-24 px-3 py-3 border-t border-white/10 flex justify-center">
+          <div className="flex justify-center border-t border-white/10 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
             <div className="flex gap-3 pb-2">
               {images.map((img, i) => (
                 <button
                   key={img.publicId ?? i}
+                  type="button"
                   onClick={() => setIndex(i)}
-                  className={`relative shrink-0 rounded-xl overflow-hidden border transition-all duration-200 ${
+                  aria-label={`Show bill ${i + 1}`}
+                  aria-current={i === index}
+                  className={`relative shrink-0 overflow-hidden rounded-xl border transition-all duration-200 ${
                     i === index
-                      ? 'border-white scale-105'
+                      ? 'scale-105 border-white'
                       : 'border-white/20 opacity-60'
                   }`}
                 >
                   <img
                     src={getImageUrl(img.url, 'thumbnail')}
-                    className="w-16 h-16 object-cover"
+                    alt=""
+                    className="h-16 w-16 object-cover"
                   />
-
-                  {i === index && (
-                    <div className="absolute inset-0 ring-2 ring-white/60 rounded-xl" />
-                  )}
                 </button>
               ))}
             </div>

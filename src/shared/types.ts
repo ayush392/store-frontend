@@ -3,14 +3,23 @@ import type { AccountType } from './schemas/account.schema';
 import type { AttendanceType, SalaryType } from './schemas/staff.schema';
 import type { TransactionType } from './schemas/transaction.schema';
 import type { ObjectId } from './schemas/common.schema';
+import type { UserRole } from './schemas/auth.schema';
 
 export interface FormInputProps {
   label: string;
   field: AnyFieldApi;
   disabled?: boolean;
-  error?: string;
-  classNames?: string;
 }
+
+// GET /auth/me (the backend also sends isActive, which the app doesn't use).
+export type Me = {
+  name: string;
+  phone: string;
+  role: UserRole;
+};
+
+// A bill photo attached to a transaction (Cloudinary).
+type BillImage = { url: string; publicId: string };
 
 export type Account = {
   _id: string;
@@ -38,7 +47,7 @@ export type RecentTrans = {
   amountChange: number;
   date: string; // ISO date
   account: Account;
-  images?: [{ url: string; publicId: string }];
+  images?: BillImage[];
 };
 
 type Point = {
@@ -73,7 +82,7 @@ export type Transactions = {
   amountChange: number;
   date: string;
   note: string;
-  images?: [{ url: string; publicId: string }];
+  images?: BillImage[];
 };
 
 export type UserDetails = {

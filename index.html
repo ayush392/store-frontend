@@ -3,14 +3,32 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#2563eb" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>Dukaan Book</title>
+  <script>
+    // Apply the theme before the app loads to avoid a flash of the wrong theme.
+    // Same rules as src/shared/theme.ts; keep them in sync.
+    // localStorage.theme is 'system' (default), 'light' or 'dark'.
+    (function () {
+      var theme = 'light';
+      try {
+        var pref = localStorage.getItem('theme');
+        if (pref === 'dark') theme = 'dark';
+        else if (pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+      } catch (e) {}
+      var root = document.documentElement;
+      root.setAttribute('data-theme', theme);
+      root.style.colorScheme = theme;
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', theme === 'dark' ? '#0f172a' : '#ffffff');
+    })();
+  </script>
 </head>
 
 <body>
